@@ -1,18 +1,18 @@
 # Experiment general settings
 experiment_name: "financial_sentiment_analysis"
 seed: 42
-max_epochs: 10
+epochs: 10
 batch_size: 32
 
 # Data-related configs
 data:
-  data_path: "./data/processed"
+  data_dir: "./data/processed"
   max_rows: 1000
 
 # Model hyperparameters
 model:
   model_name: "Classifier"
-  learning_rate: 0.001
+  lr: 0.001
   dropout: 0.3
   num_layers: 2
   hidden_dim: 256
