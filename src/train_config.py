@@ -7,13 +7,27 @@ from data import MyDataset
 from omegaconf import OmegaConf
 import random
 import numpy as np
+import wandb
 
 
 
-def train(data_dir, max_rows, batch_size, epochs, lr, seed):
+def train(data_dir, max_rows, batch_size, epochs, lr, seed, experiment_name):
     """
     Train a text classification model.
     """
+
+    wandb.init(
+        project=experiment_name,  # change to your project name
+        config={
+            "data_dir": data_dir,
+            "max_rows": max_rows,
+            "batch_size": batch_size,
+            "epochs": epochs,
+            "lr": lr,
+            "seed": seed
+        }
+    )
+
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -31,6 +45,7 @@ def train(data_dir, max_rows, batch_size, epochs, lr, seed):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
+    wandb.watch(model, log="all", log_freq=10)
     print("Training started...")
     model.train()
 
@@ -52,9 +67,13 @@ def train(data_dir, max_rows, batch_size, epochs, lr, seed):
             running_loss += loss.item()
 
         print(f"Epoch {epoch+1}, Loss: {running_loss / len(dataloader):.4f}")
+        wandb.log({"epoch": epoch + 1, "loss": running_loss})
 
     print("Training complete.")
 
+    torch.save(model.state_dict(), "model.pt")
+    wandb.save("model.pt", policy="now")
+
 if __name__ == "__main__":
     config = OmegaConf.load('conf/config.yaml')
-    train(config.data.data_dir, config.data.max_rows, config.batch_size, config.epochs, config.model.lr, config.seed)
+    train(config.data.data_dir, config.data.max_rows, config.batch_size, config.epochs, config.model.lr, config.seed, config.experiment_name)

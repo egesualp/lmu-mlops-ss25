@@ -1,0 +1,31 @@
+{
+  "os":  "Windows-10-10.0.26100-SP0",
+  "python":  "CPython 3.11.3",
+  "startedAt":  "2025-06-17T20:14:49.898944Z",
+  "program":  "c:\\Users\\dejvi\\Documents\\GitHub\\lmu-mlops-ss25\\src\\train_config.py",
+  "codePath":  "src\\train_config.py",
+  "git":  {
+    "remote":  "https://github.com/egesualp/lmu-mlops-ss25.git",
+    "commit":  "77da8ea7661ef95a4c90741dceed58208ffcc4e2"
+  },
+  "email":  "dejvistoptani@gmail.com",
+  "root":  "C:\\Users\\dejvi\\Documents\\GitHub\\lmu-mlops-ss25",
+  "host":  "LAPTOP-UTU8S3IJ",
+  "executable":  "C:\\Users\\dejvi\\Documents\\GitHub\\lmu-mlops-ss25\\.mlops_env\\Scripts\\python.exe",
+  "codePathLocal":  "src\\train_config.py",
+  "cpu_count":  10,
+  "cpu_count_logical":  12,
+  "disk":  {
+    "/":  {
+      "total":  "511092715520",
+      "used":  "487451836416"
+    }
+  },
+  "memory":  {
+    "total":  "16832106496"
+  },
+  "cpu":  {
+    "count":  10,
+    "countLogical":  12
+  }
+}

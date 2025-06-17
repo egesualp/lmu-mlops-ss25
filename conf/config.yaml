@@ -1,13 +1,13 @@
 # Experiment general settings
 experiment_name: "financial_sentiment_analysis"
 seed: 42
-epochs: 10
+epochs: 5
 batch_size: 32
 
 # Data-related configs
 data:
   data_dir: "./data/processed"
-  max_rows: 1000
+  max_rows: 100
 
 # Model hyperparameters
 model:
