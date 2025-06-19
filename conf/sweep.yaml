@@ -1,0 +1,10 @@
+program: src/train_config.py
+method: grid
+
+parameters:
+  pretrained_model: 
+    values: ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"]
+  lr: 
+    values: [0.0001, 0.001, 0.01]
+  dropout: 
+    values: [0.1, 0.3, 0.5]

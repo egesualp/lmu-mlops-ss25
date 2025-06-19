@@ -9,10 +9,12 @@ class Classifier(nn.Module):
     Assumes multiclass classification.
     """
 
-    def __init__(self, pretrained_model_name="bert-base-uncased", num_labels=3):
+    def __init__(self, pretrained_model_name="bert-base-uncased", num_labels=3, dropout=0.3):
+
         super().__init__()
         self.tokenizer = BertTokenizer.from_pretrained(pretrained_model_name)  # <--- add this
         self.bert = BertModel.from_pretrained(pretrained_model_name)
+        self.dropout = nn.Dropout(dropout)
         self.classifier = nn.Linear(self.bert.config.hidden_size, num_labels)
 
     def forward(self, text: list[str]) -> torch.Tensor:
@@ -23,8 +25,11 @@ class Classifier(nn.Module):
         outputs = self.bert(**encoding)
         pooled_output = outputs.pooler_output  # [batch_size, hidden_size]
 
+        # Apply dropout
+        dropped = self.dropout(pooled_output)
+
         # Classification head
-        logits = self.classifier(pooled_output)  # [batch_size, num_labels]
+        logits = self.classifier(dropped)  # [batch_size, num_labels]
         return logits
 
 

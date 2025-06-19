@@ -1,33 +1,48 @@
-import typer
 import torch
 from torch.utils.data import DataLoader
 from torch import nn, optim
 from model import Classifier
 from data import MyDataset
-from omegaconf import OmegaConf
 import random
 import numpy as np
 import wandb
+import hydra
+import os
+from omegaconf import DictConfig, OmegaConf
 
 
-
-def train(data_dir, max_rows, batch_size, epochs, lr, seed, experiment_name):
+@hydra.main(config_path="../conf", config_name="config")
+def train(cfg: DictConfig):
     """
     Train a text classification model.
     """
+    experiment_name = cfg.experiment_name
+    data_dir = cfg.data.data_dir
+    max_rows = cfg.data.max_rows
+    batch_size = cfg.batch_size
+    epochs = cfg.epochs
+    lr = cfg.model.lr
+    seed = cfg.seed
+    pretrained_model = cfg.model.pretrained_model
+    dropout = cfg.model.dropout
+
+
 
     wandb.init(
-        project=experiment_name,  # change to your project name
+        project=experiment_name,
         config={
             "data_dir": data_dir,
             "max_rows": max_rows,
             "batch_size": batch_size,
             "epochs": epochs,
             "lr": lr,
-            "seed": seed
-        }
+            "seed": seed,
+            "pretrained_model": pretrained_model,
+            "dropout": dropout,
+        },
     )
 
+    # Seed everything for reproducibility
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -38,7 +53,8 @@ def train(data_dir, max_rows, batch_size, epochs, lr, seed, experiment_name):
     dataset = MyDataset(data_dir, max_rows)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    model = Classifier()
+    # Pass pretrained_model and dropout to your Classifier
+    model = Classifier(pretrained_model_name=pretrained_model, dropout=dropout)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
@@ -46,6 +62,7 @@ def train(data_dir, max_rows, batch_size, epochs, lr, seed, experiment_name):
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     wandb.watch(model, log="all", log_freq=10)
+
     print("Training started...")
     model.train()
 
@@ -66,14 +83,16 @@ def train(data_dir, max_rows, batch_size, epochs, lr, seed, experiment_name):
 
             running_loss += loss.item()
 
-        print(f"Epoch {epoch+1}, Loss: {running_loss / len(dataloader):.4f}")
-        wandb.log({"epoch": epoch + 1, "loss": running_loss})
+        avg_loss = running_loss / len(dataloader)
+        print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
+        wandb.log({"epoch": epoch + 1, "loss": avg_loss})
 
     print("Training complete.")
 
     torch.save(model.state_dict(), "model.pt")
     wandb.save("model.pt", policy="now")
 
+
 if __name__ == "__main__":
-    config = OmegaConf.load('conf/config.yaml')
-    train(config.data.data_dir, config.data.max_rows, config.batch_size, config.epochs, config.model.lr, config.seed, config.experiment_name)
+    config = OmegaConf.load("conf/config.yaml")
+    train()
