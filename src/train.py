@@ -1,11 +1,13 @@
-import typer
 import torch
-from torch.utils.data import DataLoader
+import typer
 from torch import nn, optim
-from model import Classifier
+from torch.utils.data import DataLoader
+
 from data import MyDataset
+from model import Classifier
 
 app = typer.Typer()
+
 
 @app.command()
 def train(
@@ -13,8 +15,8 @@ def train(
     max_rows: int = typer.Option(200, help="Maximum number of rows to load from dataset"),
     batch_size: int = typer.Option(16, help="Batch size for training"),
     epochs: int = typer.Option(5, help="Number of training epochs"),
-    lr: float = typer.Option(1e-4, help="Learning rate")
-):
+    lr: float = typer.Option(1e-4, help="Learning rate"),
+) -> None:
     """
     Train a text classification model.
     """
@@ -32,7 +34,7 @@ def train(
     model.train()
 
     for epoch in range(epochs):
-        print(f"Epoch {epoch+1}/{epochs}")
+        print(f"Epoch {epoch + 1}/{epochs}")
         running_loss = 0.0
 
         for batch in dataloader:
@@ -48,9 +50,10 @@ def train(
 
             running_loss += loss.item()
 
-        print(f"Epoch {epoch+1}, Loss: {running_loss / len(dataloader):.4f}")
+        print(f"Epoch {epoch + 1}, Loss: {running_loss / len(dataloader):.4f}")
 
     print("Training complete.")
+
 
 if __name__ == "__main__":
     app()

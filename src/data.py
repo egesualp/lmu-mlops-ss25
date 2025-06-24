@@ -52,7 +52,7 @@ def preprocess_data(input_path: Path, output_folder: Path) -> None:
 
 
 @app.command()
-def preprocess(input_path: Path, output_folder: Path):
+def preprocess(input_path: Path, output_folder: Path) -> None:
     """
     Preprocess raw data located at `input_path` and save cleaned data to `output_folder/processed`.
     """
@@ -61,7 +61,7 @@ def preprocess(input_path: Path, output_folder: Path):
 
 
 @app.command()
-def load(data_path: Path, max_rows: int = typer.Option(None, help="Limit to first N rows")):
+def load(data_path: Path, max_rows: int = typer.Option(None, help="Limit to first N rows")) -> None:
     """
     Load dataset from processed data path and print basic info.
     """
