@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import kagglehub
 import pandas as pd
 import torch
 import typer
@@ -35,9 +36,9 @@ class MyDataset(Dataset):
 
 def preprocess_data(input_path: Path, output_folder: Path) -> None:
     """Preprocess raw CSV and save cleaned version in output_folder/processed/"""
-    raw_file = input_path / "sentiment_data.csv"
+    raw_file = input_path / "data.csv"
     if not raw_file.exists():
-        raise FileNotFoundError(f"'sentiment_data.csv' not found at {raw_file}")
+        raise FileNotFoundError(f"'data.csv' not found at {raw_file}")
 
     df = pd.read_csv(raw_file)
     df = df.dropna(subset=["Sentence", "Sentiment"])
@@ -68,6 +69,29 @@ def load(data_path: Path, max_rows: int = typer.Option(None, help="Limit to firs
     dataset = MyDataset(data_path, max_rows)
     typer.echo(f"Loaded dataset with {len(dataset)} samples")
     typer.echo(f"Labels mapping: {dataset.label2id}")
+
+@app.command()
+def download() -> None:
+    """
+    Download the financial sentiment dataset from KaggleHub and copy CSVs to data/raw.
+    """
+    try:
+        typer.echo("Downloading dataset from KaggleHub...")
+        path_raw = kagglehub.dataset_download("sbhatti/financial-sentiment-analysis")
+        path = Path(path_raw)
+    except Exception as e:
+        typer.echo(f"Failed to download dataset: {e}", err=True)
+        return
+
+    dest = Path("data/raw")
+    dest.mkdir(parents=True, exist_ok=True)
+
+    for file in path.glob("*.csv"):
+        target = dest / file.name
+        file.replace(target)
+        typer.echo(f"Copied: {file.name} → {target}")
+
+    typer.echo("Download and copy complete.")
 
 
 if __name__ == "__main__":

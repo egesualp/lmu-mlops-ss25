@@ -1,3 +1,9 @@
+# data folders
+data/raw
+data/processed
+wandb/
+models/
+
 docs/site/
 
 # test cache

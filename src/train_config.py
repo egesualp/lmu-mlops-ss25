@@ -80,7 +80,7 @@ def train(
 
     print("Training complete.")
 
-    torch.save(model.state_dict(), "model.pt")
+    torch.save(model.state_dict(), "models/model.pt")
     wandb.save("model.pt", policy="now")
 
 @app.command()

@@ -34,9 +34,21 @@ def dev_requirements(ctx: Context) -> None:
 
 # Project commands
 @task
+def download(ctx: Context) -> None:
+    """Download dataset from KaggleHub."""
+    ctx.run("process-data download", echo=True, pty=not WINDOWS)
+
+
+@task
 def preprocess_data(ctx: Context) -> None:
-    """Preprocess data."""
-    ctx.run(f"python src/{PROJECT_NAME}/data.py data/raw data/processed", echo=True, pty=not WINDOWS)
+    """Preprocess data using the Typer CLI."""
+    ctx.run("process-data preprocess data/raw data", echo=True, pty=not WINDOWS)
+
+
+@task
+def load_dataset(ctx: Context, max_rows=100) -> None:
+    """Load dataset and print info."""
+    ctx.run(f"process-data load data/processed --max-rows {max_rows}", echo=True, pty=not WINDOWS)
 
 
 @task
