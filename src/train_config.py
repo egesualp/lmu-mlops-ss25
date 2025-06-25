@@ -1,24 +1,32 @@
 import random
-
 import numpy as np
 import torch
 import typer
 from omegaconf import OmegaConf
 from torch import nn, optim
 from torch.utils.data import DataLoader
-
 import wandb
+
 from data import MyDataset
 from model import Classifier
 
+app = typer.Typer()
 
-def train(data_dir, max_rows, batch_size, epochs, lr, seed, experiment_name) -> None:
+def train(
+    data_dir: str,
+    max_rows: int,
+    batch_size: int,
+    epochs: int,
+    lr: float,
+    seed: int,
+    experiment_name: str
+) -> None:
     """
     Train a text classification model.
     """
 
     wandb.init(
-        project=experiment_name,  # change to your project name
+        project=experiment_name,
         config={
             "data_dir": data_dir,
             "max_rows": max_rows,
@@ -75,9 +83,14 @@ def train(data_dir, max_rows, batch_size, epochs, lr, seed, experiment_name) -> 
     torch.save(model.state_dict(), "model.pt")
     wandb.save("model.pt", policy="now")
 
-
-if __name__ == "__main__":
-    config = OmegaConf.load("conf/config.yaml")
+@app.command()
+def train_config(
+    config_file: str = typer.Argument("conf/config.yaml", help="Path to YAML config")
+) -> None:
+    """
+    Run training using a config YAML file.
+    """
+    config = OmegaConf.load(config_file)
     train(
         config.data.data_dir,
         config.data.max_rows,
@@ -87,3 +100,6 @@ if __name__ == "__main__":
         config.seed,
         config.experiment_name,
     )
+
+if __name__ == "__main__":
+    app()
