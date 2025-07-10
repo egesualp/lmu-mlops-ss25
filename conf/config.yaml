@@ -6,13 +6,11 @@ batch_size: 32
 
 # Data-related configs
 data:
-  data_dir: "./data/processed"
+  data_dir: "../../../data/processed"
   max_rows: 100
 
 # Model hyperparameters
 model:
-  model_name: "Classifier"
+  pretrained_model: "bert-base-uncased"
   lr: 0.001
   dropout: 0.3
-  num_layers: 2
-  hidden_dim: 256

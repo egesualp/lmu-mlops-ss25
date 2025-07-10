@@ -1,3 +1,8 @@
+import torch
+from torch.utils.data import DataLoader
+from torch import nn, optim
+from model import Classifier
+from data import MyDataset
 import random
 import numpy as np
 import torch
@@ -6,24 +11,29 @@ from omegaconf import OmegaConf
 from torch import nn, optim
 from torch.utils.data import DataLoader
 import wandb
+import hydra
+import os
+from omegaconf import DictConfig, OmegaConf
 
 from data import MyDataset
 from model import Classifier
 
-app = typer.Typer()
-
-def train(
-    data_dir: str,
-    max_rows: int,
-    batch_size: int,
-    epochs: int,
-    lr: float,
-    seed: int,
-    experiment_name: str
-) -> None:
+@hydra.main(config_path="../conf", config_name="config")
+def train(cfg: DictConfig):
     """
     Train a text classification model.
     """
+    experiment_name = cfg.experiment_name
+    data_dir = cfg.data.data_dir
+    max_rows = cfg.data.max_rows
+    batch_size = cfg.batch_size
+    epochs = cfg.epochs
+    lr = cfg.model.lr
+    seed = cfg.seed
+    pretrained_model = cfg.model.pretrained_model
+    dropout = cfg.model.dropout
+
+
 
     wandb.init(
         project=experiment_name,
@@ -34,9 +44,12 @@ def train(
             "epochs": epochs,
             "lr": lr,
             "seed": seed,
+            "pretrained_model": pretrained_model,
+            "dropout": dropout,
         },
     )
 
+    # Seed everything for reproducibility
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -47,7 +60,8 @@ def train(
     dataset = MyDataset(data_dir, max_rows)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    model = Classifier()
+    # Pass pretrained_model and dropout to your Classifier
+    model = Classifier(pretrained_model_name=pretrained_model, dropout=dropout)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
@@ -55,6 +69,7 @@ def train(
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     wandb.watch(model, log="all", log_freq=10)
+
     print("Training started...")
     model.train()
 
@@ -75,31 +90,16 @@ def train(
 
             running_loss += loss.item()
 
-        print(f"Epoch {epoch + 1}, Loss: {running_loss / len(dataloader):.4f}")
-        wandb.log({"epoch": epoch + 1, "loss": running_loss})
+        avg_loss = running_loss / len(dataloader)
+        print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
+        wandb.log({"epoch": epoch + 1, "loss": avg_loss})
 
     print("Training complete.")
 
     torch.save(model.state_dict(), "models/model.pt")
     wandb.save("model.pt", policy="now")
 
-@app.command()
-def train_config(
-    config_file: str = typer.Argument("conf/config.yaml", help="Path to YAML config")
-) -> None:
-    """
-    Run training using a config YAML file.
-    """
-    config = OmegaConf.load(config_file)
-    train(
-        config.data.data_dir,
-        config.data.max_rows,
-        config.batch_size,
-        config.epochs,
-        config.model.lr,
-        config.seed,
-        config.experiment_name,
-    )
 
 if __name__ == "__main__":
-    app()
+    config = OmegaConf.load("conf/config.yaml")
+    train()
