@@ -1,0 +1,32 @@
+program: src/train.py
+project: sentiment-analysis
+name: sentiment-analysis-sweep
+group: lmu-mlops-ss25
+
+method: bayes
+
+metric:
+  name: val_loss
+  goal: minimize
+
+command:
+  - python
+  - ${program}                              # wandb substitutes this one
+  - model.lr=${lr}              # ← double braces
+  - model.dropout=${dropout}
+  - model.pretrained_model=${pretrained_model}
+  - logging=wandb
+
+parameters:
+  lr:
+    distribution: log_uniform
+    min: 0.0001
+    max: 0.1
+
+  dropout:
+    values: [0.1, 0.3, 0.5]
+
+  pretrained_model:
+    values: ["bert-base-uncased",
+             "roberta-base",
+             "distilbert-base-uncased"]

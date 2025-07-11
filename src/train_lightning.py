@@ -50,7 +50,7 @@ def train(cfg: DictConfig):
     # Basic config values
     experiment_name = cfg.experiment_name
     data_dir = cfg.data.data_dir
-    max_rows = cfg.data.max_rows
+    max_rows = cfg.data.get("max_rows", None)  # Optional: use None to load all data
     batch_size = cfg.batch_size
     epochs = cfg.epochs
     lr = cfg.model.lr

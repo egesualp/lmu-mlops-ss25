@@ -8,6 +8,7 @@ import typer
 from torch.utils.data import Dataset
 from loguru import logger
 from typing import Optional
+from transformers import AutoTokenizer
 
 app = typer.Typer()
 
@@ -31,6 +32,22 @@ class MyDataset(Dataset):
         label_id = self.label2id[row["label"]]
         label_tensor = torch.tensor(label_id, dtype=torch.long)
         return {"text": row["text"], "label": label_tensor}
+
+class HFDataset(Dataset):
+    """A Dataset that tokenizes on-the-fly using a HuggingFace tokenizer."""
+
+    def __init__(self, base_ds: MyDataset, tokenizer: AutoTokenizer):
+        self.base_ds = base_ds
+        self.tokenizer = tokenizer
+
+    def __len__(self):
+        return len(self.base_ds)
+
+    def __getitem__(self, idx):
+        item = self.base_ds[idx]
+        encoding = self.tokenizer(item["text"], truncation=True, padding=False)
+        encoding["labels"] = item["label"]
+        return encoding
 
 def preprocess_data(
     input_path: Path,
@@ -147,6 +164,21 @@ def download() -> None:
         typer.echo(f"Copied: {file.name} → {target}")
 
     typer.echo("Download and copy complete.")
+
+
+def create_hf_datasets(data_dir: Path, pretrained_model: str, max_rows: Optional[int] = None):
+    """Create HuggingFace datasets for training and evaluation."""
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
+    
+    # Create base datasets for label mapping
+    train_base = MyDataset(data_dir / "train.csv", max_rows)
+    eval_base = MyDataset(data_dir / "eval.csv", max_rows)
+    
+    # Create HF datasets
+    train_ds = HFDataset(train_base, tokenizer)
+    eval_ds = HFDataset(eval_base, tokenizer)
+    
+    return train_ds, eval_ds, tokenizer, len(train_base.label2id)
 
 
 if __name__ == "__main__":

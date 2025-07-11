@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertTokenizer
+from transformers import AutoModelForSequenceClassification
 
 
 class Classifier(nn.Module):
@@ -31,6 +32,14 @@ class Classifier(nn.Module):
         # Classification head
         logits = self.classifier(dropped)  # [batch_size, num_labels]
         return logits
+
+
+def create_hf_model(pretrained_model_name: str, num_labels: int):
+    """Create a HuggingFace model for sequence classification."""
+    return AutoModelForSequenceClassification.from_pretrained(
+        pretrained_model_name, 
+        num_labels=num_labels
+    )
 
 
 if __name__ == "__main__":
