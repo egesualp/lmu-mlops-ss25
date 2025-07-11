@@ -75,7 +75,7 @@ class TestMyDataset:
             f.flush()
             
             with pytest.raises(pd.errors.EmptyDataError):
-                MyDataset(f.name)
+                MyDataset(Path(f.name))
         
         os.unlink(f.name)
     
@@ -87,7 +87,7 @@ class TestMyDataset:
             f.flush()
             
             with pytest.raises(KeyError):
-                MyDataset(f.name)
+                MyDataset(Path(f.name))
         
         os.unlink(f.name)
     
@@ -301,10 +301,10 @@ class TestDataIntegration:
             processed_dir = Path(temp_dir) / "processed"
             preprocess_data(raw_dir, processed_dir, train_ratio=0.6, test_ratio=0.2, eval_ratio=0.2)
             
-            # Create MyDataset
+            # Create MyDataset with consistent label mapping
             train_dataset = MyDataset(processed_dir / "train.csv")
-            test_dataset = MyDataset(processed_dir / "test.csv")
-            eval_dataset = MyDataset(processed_dir / "eval.csv")
+            test_dataset = MyDataset(processed_dir / "test.csv", label2id=train_dataset.label2id)
+            eval_dataset = MyDataset(processed_dir / "eval.csv", label2id=train_dataset.label2id)
             
             # Check datasets
             assert len(train_dataset) > 0

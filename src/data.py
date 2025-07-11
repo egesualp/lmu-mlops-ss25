@@ -16,13 +16,28 @@ app = typer.Typer()
 class MyDataset(Dataset):
     """Custom dataset for financial sentiment analysis."""
 
-    def __init__(self, data_path: Path, max_rows: Optional[int] = None) -> None:
-        self.data = pd.read_csv(data_path)
+    def __init__(self, data_path: Path, max_rows: Optional[int] = None, label2id: Optional[dict] = None) -> None:
+        # Read CSV and handle empty files
+        try:
+            self.data = pd.read_csv(data_path)
+            if self.data.empty:
+                raise pd.errors.EmptyDataError("No data found in CSV file")
+        except pd.errors.EmptyDataError:
+            raise pd.errors.EmptyDataError("No data found in CSV file")
+        
+        # Handle max_rows parameter
         if max_rows is not None:
-            self.data = self.data.head(max_rows)
-        # Create label mapping based on the 'label' column (fixed here)
-        label_set = sorted(self.data["label"].unique())
-        self.label2id = {label: i for i, label in enumerate(label_set)}
+            if max_rows <= 0:
+                self.data = pd.DataFrame(columns=self.data.columns)  # Empty dataframe
+            else:
+                self.data = self.data.head(max_rows)
+        
+        # Create or use provided label mapping
+        if label2id is not None:
+            self.label2id = label2id
+        else:
+            label_set = sorted(self.data["label"].unique())
+            self.label2id = {label: i for i, label in enumerate(label_set)}
 
     def __len__(self) -> int:
         return len(self.data)
@@ -170,9 +185,9 @@ def create_hf_datasets(data_dir: Path, pretrained_model: str, max_rows: Optional
     """Create HuggingFace datasets for training and evaluation."""
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
     
-    # Create base datasets for label mapping
+    # Create base datasets with consistent label mapping
     train_base = MyDataset(data_dir / "train.csv", max_rows)
-    eval_base = MyDataset(data_dir / "eval.csv", max_rows)
+    eval_base = MyDataset(data_dir / "eval.csv", max_rows, label2id=train_base.label2id)
     
     # Create HF datasets
     train_ds = HFDataset(train_base, tokenizer)
