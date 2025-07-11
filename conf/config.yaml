@@ -1,16 +1,26 @@
+hydra:
+  run:
+    dir: logs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: logs/multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
+
 # Experiment general settings
-experiment_name: "financial_sentiment_analysis"
-seed: 42
-epochs: 5
-batch_size: 32
+experiment_name: my_experiment
+epochs: 2
+batch_size: 16
 
 # Data-related configs
 data:
-  data_dir: "../../../data/processed"
-  max_rows: 100
+  data_dir: data/processed
+  max_rows: 200
 
 # Model hyperparameters
 model:
-  pretrained_model: "bert-base-uncased"
   lr: 0.001
+  pretrained_model: bert-base-uncased
   dropout: 0.3
+seed: 42
+eval_strategy: epoch
+logging: loguru
+save_strategy: none  # or 'end' or 'checkpoint'

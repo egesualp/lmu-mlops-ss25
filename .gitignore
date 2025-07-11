@@ -3,6 +3,7 @@ data/raw
 data/processed
 wandb/
 models/
+logs/
 
 docs/site/
 
