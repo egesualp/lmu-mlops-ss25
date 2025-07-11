@@ -1,0 +1,28 @@
+program: src/train.py
+project: sentiment-analysis
+name: sentiment-analysis-sweep
+group: lmu-mlops-ss25
+method: bayes
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args_no_hyphens}
+
+metric:
+    goal: minimize
+    name: val_loss
+parameters:
+    model.lr:
+        min: 0.0001
+        max: 0.1
+        distribution: log_uniform
+    batch_size:
+        values: [16, 32, 64]
+    epochs:
+        values: [5, 10, 15]
+    model.pretrained_model:
+        values: ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"]
+    model.dropout:
+        values: [0.1, 0.3, 0.5]
+run_cap: 10

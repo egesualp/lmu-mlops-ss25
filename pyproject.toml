@@ -33,3 +33,8 @@ select = ["I", "N", "E", "W", ]
 
 [tool.coverage.run]
 omit = ["tests/*"]
+
+[project.scripts]
+process-data = "data:app"
+train = "train:app"
+train-config = "train_config:app"
