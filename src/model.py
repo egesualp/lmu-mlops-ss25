@@ -37,7 +37,7 @@ class Classifier(nn.Module):
 def create_hf_model(pretrained_model_name: str, num_labels: int):
     """Create a HuggingFace model for sequence classification."""
     return AutoModelForSequenceClassification.from_pretrained(
-        pretrained_model_name, 
+        pretrained_model_name,
         num_labels=num_labels
     )
 

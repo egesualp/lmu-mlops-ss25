@@ -134,7 +134,7 @@ def train(cfg: DictConfig):
     elif save_strategy == "none":
         if logging_choice == "loguru":
             log.info("Training finished. No model saved.")
-    
+
     if logging_choice == "wandb":
         wandb.finish()
 

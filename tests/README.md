@@ -183,4 +183,4 @@ pytest --cov=src --cov-report=html --cov-report=term-missing
 This will create:
 - HTML coverage report in `htmlcov/`
 - Terminal output with missing lines
-- XML report for CI integration 
+- XML report for CI integration
