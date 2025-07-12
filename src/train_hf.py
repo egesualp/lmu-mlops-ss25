@@ -26,13 +26,13 @@ def setup_logging(cfg: DictConfig, logging_choice: str):
     if logging_choice in ["loguru", "both"]:
         # Get Hydra output directory
         hydra_path = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
-        
+
         # Use sensible defaults for loguru
         log_file = os.path.join(hydra_path, "train_hf.log")
-        
+
         # Remove existing handlers to avoid duplicates
         log.remove()
-        
+
         # Add console handler
         log.add(
             sys.stdout,
@@ -40,7 +40,7 @@ def setup_logging(cfg: DictConfig, logging_choice: str):
             level="INFO",
             colorize=True
         )
-        
+
         # Add file handler with rotation
         log.add(
             log_file,
@@ -50,9 +50,9 @@ def setup_logging(cfg: DictConfig, logging_choice: str):
             retention="7 days",
             compression="gz"
         )
-        
+
         log.info("Loguru logging configured")
-    
+
     if logging_choice in ["wandb", "both"]:
         # Use sensible defaults for wandb
         wandb.init(
@@ -63,7 +63,7 @@ def setup_logging(cfg: DictConfig, logging_choice: str):
             resume="allow",
             config=dict(cfg)  # Log the entire config
         )
-        
+
         log.info("Wandb logging configured")
 
 def compute_metrics(eval_pred):
@@ -72,7 +72,7 @@ def compute_metrics(eval_pred):
     """
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    
+
     return accuracy_metric.compute(predictions=predictions, references=labels)
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
@@ -90,7 +90,7 @@ def train(cfg: DictConfig):
     eval_steps = int(cfg.get("eval_steps", 100))
     logging_choice = cfg.get("logging", None)  # loguru or wandb
     save_strategy = cfg.get("save_strategy", "end")  # end/checkpoint/none
-    
+
     # Model training parameters
     weight_decay = cfg.model.get("weight_decay", 0.01)
     warmup_steps = cfg.model.get("warmup_steps", 100)
@@ -101,7 +101,7 @@ def train(cfg: DictConfig):
     adam_beta1 = cfg.model.get("adam_beta1", 0.9)
     adam_beta2 = cfg.model.get("adam_beta2", 0.999)
     adam_epsilon = cfg.model.get("adam_epsilon", 1e-8)
-    
+
     # Additional training parameters
     dataloader_num_workers = cfg.model.get("dataloader_num_workers", 0)
     dataloader_pin_memory = cfg.model.get("dataloader_pin_memory", True)
@@ -122,7 +122,7 @@ def train(cfg: DictConfig):
 
     # Setup logging
     setup_logging(cfg, logging_choice)
-    
+
     # Log initial information
     if logging_choice in ["loguru", "both"]:
         log.info("=" * 60)
@@ -142,22 +142,22 @@ def train(cfg: DictConfig):
     # Create datasets and model using imported functions
     if logging_choice in ["loguru", "both"]:
         log.info("Loading datasets...")
-    
+
     train_ds, eval_ds, tokenizer, num_labels = create_hf_datasets(
         data_dir, pretrained_model, max_rows
     )
-    
+
     if logging_choice in ["loguru", "both"]:
         log.info("Dataset loaded successfully")
         log.info("Train dataset size: {}", len(train_ds))
         log.info("Eval dataset size: {}", len(eval_ds))
         log.info("Number of labels: {}", num_labels)
-    
+
     if logging_choice in ["loguru", "both"]:
         log.info("Creating model...")
-    
+
     model = create_hf_model(pretrained_model, num_labels)
-    
+
     if logging_choice in ["loguru", "both"]:
         log.info("Model created successfully")
         log.info("Model parameters: {:,}", sum(p.numel() for p in model.parameters()))
@@ -250,14 +250,14 @@ def train(cfg: DictConfig):
     if eval_strategy != "none" and eval_ds is not None:
         if logging_choice in ["loguru", "both"]:
             log.info("Running final evaluation...")
-        
+
         final_metrics = trainer.evaluate()
-        
+
         if logging_choice in ["loguru", "both"]:
             log.info("Final evaluation results:")
             for key, value in final_metrics.items():
                 log.info("  {}: {:.4f}", key, value)
-        
+
         if logging_choice in ["wandb", "both"]:
             wandb.log({"final_eval": final_metrics})
 
@@ -265,14 +265,14 @@ def train(cfg: DictConfig):
     if save_strategy == "end":
         if logging_choice in ["loguru", "both"]:
             log.info("Saving final model...")
-        
+
         Path("models").mkdir(exist_ok=True, parents=True)
         model.save_pretrained("models/final")
         tokenizer.save_pretrained("models/final")
-        
+
         if logging_choice in ["loguru", "both"]:
             log.info("Model saved to models/final")
-        
+
         if logging_choice in ["wandb", "both"]:
             # Log model to wandb (optional)
             try:
@@ -294,4 +294,4 @@ def train(cfg: DictConfig):
         wandb.finish()
 
 if __name__ == "__main__":
-    train() 
+    train()
