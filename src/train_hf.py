@@ -75,7 +75,7 @@ def compute_metrics(eval_pred):
 
     return accuracy_metric.compute(predictions=predictions, references=labels)
 
-@hydra.main(version_base=None, config_path="../conf", config_name="config")
+@hydra.main(version_base=None, config_path="../conf", config_name="config_hf")
 def train(cfg: DictConfig):
     # Config values
     experiment_name = cfg.experiment_name
@@ -87,7 +87,7 @@ def train(cfg: DictConfig):
     seed = cfg.seed
     pretrained_model = cfg.model.pretrained_model
     eval_strategy = cfg.get("eval_strategy", "none")  # epoch/steps/none
-    eval_steps = int(cfg.get("eval_steps", 100))
+    eval_steps = int(cfg.get("eval_steps", 100)) #TODO: check if this is correct
     logging_choice = cfg.get("logging", None)  # loguru or wandb
     save_strategy = cfg.get("save_strategy", "end")  # end/checkpoint/none
 
@@ -153,6 +153,7 @@ def train(cfg: DictConfig):
         log.info("Eval dataset size: {}", len(eval_ds))
         log.info("Number of labels: {}", num_labels)
 
+    #TODO:: Why do we use if all the time? check if this is correct
     if logging_choice in ["loguru", "both"]:
         log.info("Creating model...")
 
@@ -242,6 +243,7 @@ def train(cfg: DictConfig):
 
     trainer.train()
 
+    #TODO:: Add maybe try and catch statements here
     if logging_choice in ["loguru", "both"]:
         log.info("Training completed!")
         log.info("=" * 60)
