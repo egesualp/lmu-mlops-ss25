@@ -7,7 +7,8 @@ name = "mlops_project"
 version = "0.0.1"
 description = "A short description of the project."
 authors = [
-  { name = "dejvis", email = "your@email.com" },
+  { name = "egesualp", email = "egesualp@gmail.com" },
+  { name = "dejvis", email = "your@email.com" }
 ]
 
 keywords = ["machine learning", "MLOps"]

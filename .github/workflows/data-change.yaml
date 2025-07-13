@@ -1,0 +1,38 @@
+name: Dataset Statistics on Data Change
+
+on:
+  push:
+    paths:
+      - 'data/**'
+  pull_request:
+    paths:
+      - 'data/**'
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install -r requirements.txt
+
+      - name: Run dataset statistics
+        run: python src/stats.py > stats_output.txt
+
+      - name: Setup CML
+        if: github.event_name == 'pull_request'
+        uses: iterative/setup-cml@v1
+
+      - name: Comment dataset stats
+        if: github.event_name == 'pull_request'
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## 📊 Dataset Report (Triggered by Data Change)" > report.md
+          cat stats_output.txt >> report.md
+          cml comment create report.md
