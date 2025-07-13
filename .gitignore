@@ -4,7 +4,7 @@ data/processed
 wandb/
 models/
 logs/
-
+reports/figures/*
 docs/site/
 
 # test cache

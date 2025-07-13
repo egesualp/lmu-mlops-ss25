@@ -1,0 +1,48 @@
+name: Evaluate on Model Registry Change
+
+on:
+  push:
+    paths:
+      - 'model_registry/**'
+  pull_request:
+    paths:
+      - 'model_registry/**'
+
+jobs:
+  evaluate-model:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run evaluation
+        run: |
+          python src/eval.py \
+            --model_path models/final \
+            --model_type hf \
+            --data_dir data/processed \
+            --logging loguru \
+            --save_plots False \
+            > metrics.txt
+
+      - name: Post evaluation summary to PR
+        if: github.event_name == 'pull_request'
+        uses: iterative/setup-cml@v1
+
+      - name: CML comment
+        if: github.event_name == 'pull_request'
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## Evaluation triggered by model registry change" > report.md
+          cat metrics.txt >> report.md
+          cml comment create report.md
