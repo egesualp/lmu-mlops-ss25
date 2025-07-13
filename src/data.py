@@ -24,14 +24,14 @@ class MyDataset(Dataset):
                 raise pd.errors.EmptyDataError("No data found in CSV file")
         except pd.errors.EmptyDataError:
             raise pd.errors.EmptyDataError("No data found in CSV file")
-        
+
         # Handle max_rows parameter
         if max_rows is not None:
             if max_rows <= 0:
                 self.data = pd.DataFrame(columns=self.data.columns)  # Empty dataframe
             else:
                 self.data = self.data.head(max_rows)
-        
+
         # Create or use provided label mapping
         if label2id is not None:
             self.label2id = label2id
@@ -184,15 +184,15 @@ def download() -> None:
 def create_hf_datasets(data_dir: Path, pretrained_model: str, max_rows: Optional[int] = None):
     """Create HuggingFace datasets for training and evaluation."""
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
-    
+
     # Create base datasets with consistent label mapping
     train_base = MyDataset(data_dir / "train.csv", max_rows)
     eval_base = MyDataset(data_dir / "eval.csv", max_rows, label2id=train_base.label2id)
-    
+
     # Create HF datasets
     train_ds = HFDataset(train_base, tokenizer)
     eval_ds = HFDataset(eval_base, tokenizer)
-    
+
     return train_ds, eval_ds, tokenizer, len(train_base.label2id)
 
 
