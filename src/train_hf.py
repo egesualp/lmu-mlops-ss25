@@ -75,7 +75,7 @@ def compute_metrics(eval_pred):
 
     return accuracy_metric.compute(predictions=predictions, references=labels)
 
-@hydra.main(version_base=None, config_path="../conf", config_name="config")
+@hydra.main(version_base=None, config_path="../conf", config_name="config_hf")
 def train(cfg: DictConfig):
     # Config values
     experiment_name = cfg.experiment_name

@@ -53,7 +53,7 @@ def load_dataset(ctx: Context, split="train", max_rows=100) -> None:
 @task
 def train(ctx: Context) -> None:
     """Train model."""
-    ctx.run(f"python src/train.py", echo=True, pty=not WINDOWS)
+    ctx.run(f"python src/train_hf.py", echo=True, pty=not WINDOWS)
 
 
 @task

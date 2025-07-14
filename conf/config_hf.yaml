@@ -6,7 +6,7 @@ hydra:
     subdir: ${hydra.job.num}
 
 # Experiment general settings
-experiment_name: my_experiment
+experiment_name: run_financial_bert
 epochs: 5  # More epochs for better convergence
 batch_size: 16
 
@@ -41,5 +41,5 @@ model:
   full_determinism: false  # Full determinism for reproducibility
 seed: 42
 eval_strategy: epoch
-logging: loguru  # Options: loguru, wandb, both, none
+logging: wandb  # Options: loguru, wandb, both, none
 save_strategy: none  # or 'end' or 'checkpoint'
