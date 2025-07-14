@@ -1,6 +1,46 @@
 outs:
-- md5: da9ff8016fd39c9830842105b8bcb749.dir
-  size: 1490368
-  nfiles: 6
-  hash: md5
+- hash: md5
   path: data
+  files:
+  - relpath: processed/.gitignore
+    md5: ce500487d69dc018b2caf5e02fa57626
+    size: 20
+    cloud:
+      storage:
+        etag: 08b1f5f9b1a2bc8e031001
+        version_id: '1752493327284913'
+  - relpath: processed/eval.csv
+    md5: ed27217cef123614063d7a4868c5069f
+    size: 75239
+    cloud:
+      storage:
+        etag: 08e28284b2a2bc8e031001
+        version_id: '1752493327450466'
+  - relpath: processed/sentiment_data.csv.dvc
+    md5: e38a8db8e9a185584f49ee8f9afa73ca
+    size: 100
+    cloud:
+      storage:
+        etag: 08f8c2fbb1a2bc8e031001
+        version_id: '1752493327311224'
+  - relpath: processed/test.csv
+    md5: c832e2c9805052cfba94366e38434af7
+    size: 74322
+    cloud:
+      storage:
+        etag: 08e2bd83b2a2bc8e031001
+        version_id: '1752493327441634'
+  - relpath: processed/train.csv
+    md5: 92d899cd0a04b4bac77faad947f6fdb8
+    size: 595570
+    cloud:
+      storage:
+        etag: 08f8f584b2a2bc8e031001
+        version_id: '1752493327465208'
+  - relpath: raw/data.csv
+    md5: dcd72bae7e4f725c0281e66379f73e83
+    size: 745117
+    cloud:
+      storage:
+        etag: 08efa6f1b1a2bc8e031001
+        version_id: '1752493327143791'
