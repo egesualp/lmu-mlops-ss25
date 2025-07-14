@@ -1,6 +1,7 @@
 name: Dataset Statistics on Data Change
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'data/**'
