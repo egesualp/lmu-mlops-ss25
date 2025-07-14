@@ -44,3 +44,6 @@ outs:
       storage:
         etag: 08efa6f1b1a2bc8e031001
         version_id: '1752493327143791'
+  - relpath: test_trigger.txt
+    md5: d8e8fca2dc0f896fd7cb4cb0031ba249
+    size: 5
