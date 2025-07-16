@@ -36,6 +36,34 @@ steps:
     '--update-secrets=WANDB_API_KEY=WANDB_API_KEY:latest'
   ]
 
+#Run API Tests and Save
+- name: Auth with GCP
+  uses: google-github-actions/auth@v2
+  with:
+    credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+- name: Set up Cloud SDK
+  uses: google-github-actions/setup-gcloud@v2
+
+- name: Extract deployed model URL
+  run: |
+    DEPLOYED_MODEL_URL=$(gcloud run services describe financial-sentiment-api \
+      --region=europe-west3 \
+      --format='value(status.url)')
+    echo "DEPLOYED_MODEL_URL=$DEPLOYED_MODEL_URL" >> $GITHUB_ENV
+
+- name: Run load test on deployed model
+  env:
+    DEPLOYED_MODEL_URL: ${{ env.DEPLOYED_MODEL_URL }}
+  run: |
+    locust -f tests/locustfile.py \
+      --headless -u 50 -r 5 --run-time 5m --host=$DEPLOYED_MODEL_URL --csv=/locust/results
+
+- name: Upload locust results
+  uses: actions/upload-artifact@v4
+  with:
+    name: locust-results
+    path: /locust
 
 options:
   logging: CLOUD_LOGGING_ONLY
