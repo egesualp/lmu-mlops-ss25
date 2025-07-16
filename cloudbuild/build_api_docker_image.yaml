@@ -19,5 +19,23 @@ steps:
     'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/mlops-api:latest'
   ]
 
+# Deploy to Cloud Run
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'Deploy to Cloud Run'
+  args: [
+    'run',
+    'deploy',
+    'financial-sentiment-api',
+    '--image',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/mlops-api:latest',
+    '--region',
+    'europe-west3',
+    '--platform',
+    'managed',
+    # inject secrets as environment variables
+    '--update-secrets=WANDB_API_KEY=WANDB_API_KEY:latest'
+  ]
+
+
 options:
   logging: CLOUD_LOGGING_ONLY
