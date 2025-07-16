@@ -60,5 +60,3 @@ async def predict(request: PredictRequest):
         score, label_id = torch.max(probs, dim=1)
         label = model.config.id2label[label_id.item()] if hasattr(model.config, "id2label") else str(label_id.item())
     return PredictResponse(label=label, score=score.item())
-
-
