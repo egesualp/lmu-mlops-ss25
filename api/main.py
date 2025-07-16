@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
+from fastapi import FastAPI
 from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from contextlib import asynccontextmanager
+from transformers import AutoTokenizer
 import wandb
-import torch
+import onnxruntime as ort
+import numpy as np
+import os
 
 class PredictRequest(BaseModel):
     text: str
@@ -13,50 +14,75 @@ class PredictResponse(BaseModel):
     label: str
     score: float
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Download model artifact from wandb
-    run = wandb.init(project="financial-sentiment-bert", job_type="inference")
-    artifact = run.use_artifact('model-run_financial_bert:latest', type='model')
-    artifact_dir = artifact.download()
-    # Load model and tokenizer using HuggingFace
-    tokenizer = AutoTokenizer.from_pretrained(artifact_dir)
-    model = AutoModelForSequenceClassification.from_pretrained(artifact_dir)
+    # === Step 1: Download ONNX artifact from W&B ===
+    run = wandb.init(
+        project="financial-sentiment-bert",
+        entity="cbrkcan90-ludwig-maximilianuniversity-of-munich",
+        job_type="inference"
+    )
 
+    artifact = run.use_artifact(
+        "cbrkcan90-ludwig-maximilianuniversity-of-munich/financial-sentiment-bert/financial-bert-onnx:latest",
+        type="model"
+    )
+    artifact_dir = artifact.download()
+    print(f"ONNX model downloaded to: {artifact_dir}")
+
+    # === Step 2: Load tokenizer ===
+    tokenizer = AutoTokenizer.from_pretrained(artifact_dir)
+
+    # === Step 3: Load ONNX model ===
+    session = ort.InferenceSession(os.path.join(artifact_dir, "model.onnx"))
+    input_names = [inp.name for inp in session.get_inputs()]
+    output_name = session.get_outputs()[0].name
+
+    # === Step 4: Set state ===
     app.state.tokenizer = tokenizer
-    app.state.model = model
+    app.state.session = session
+    app.state.input_names = input_names
+    app.state.output_name = output_name
+    app.state.label_map = {0: "negative", 1: "neutral", 2: "positive"}  # Adjust if needed
 
     yield
 
     run.finish()
-    # Clean up the model
-    del model
-    del tokenizer
-    print("Model cleaned up! Goodbye!")
-
+    print("W&B run closed, model cleanup complete.")
 
 app = FastAPI(
-    title="Financial Sentiment Analysis API",
-    description="API for predicting sentiment of financial text",
-    version="1.0",
+    title="Financial Sentiment Analysis API (ONNX)",
+    description="ONNX-based inference API for financial sentiment",
+    version="2.0",
     lifespan=lifespan
 )
 
-
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Sentiment Analysis of Financial Text API!"}
-
+    return {"message": "Welcome to the ONNX-powered Financial Sentiment API!"}
 
 @app.post("/predict", response_model=PredictResponse)
 async def predict(request: PredictRequest):
     tokenizer = app.state.tokenizer
-    model = app.state.model
-    inputs = tokenizer(request.text, return_tensors="pt", truncation=True, padding=True)
-    with torch.no_grad():
-        outputs = model(**inputs)
-        probs = torch.nn.functional.softmax(outputs.logits, dim=1)
-        score, label_id = torch.max(probs, dim=1)
-        label = model.config.id2label[label_id.item()] if hasattr(model.config, "id2label") else str(label_id.item())
-    return PredictResponse(label=label, score=score.item())
+    session = app.state.session
+    input_names = app.state.input_names
+    output_name = app.state.output_name
+    label_map = app.state.label_map
+
+    # === Step 1: Tokenize input ===
+    inputs = tokenizer(request.text, return_tensors="np", truncation=True, padding=True)
+
+    # === Step 2: Prepare inputs for ONNX ===
+    ort_inputs = {
+        name: inputs[name].astype(np.int64) for name in input_names
+    }
+
+    # === Step 3: Inference ===
+    outputs = session.run([output_name], ort_inputs)
+    logits = outputs[0][0]
+    probs = np.exp(logits) / np.sum(np.exp(logits))  # Softmax
+    label_id = int(np.argmax(probs))
+    score = float(np.max(probs))
+    label = label_map.get(label_id, str(label_id))
+
+    return PredictResponse(label=label, score=score)
