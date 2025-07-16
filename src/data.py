@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import kagglehub
+from kagglehub import dataset_load, KaggleDatasetAdapter
 import pandas as pd
 import torch
 import typer
@@ -164,6 +165,26 @@ def download() -> None:
     """
     try:
         typer.echo("Downloading dataset from KaggleHub...")
+        df = dataset_load(
+            KaggleDatasetAdapter.PANDAS,
+            "sbhatti/financial-sentiment-analysis",
+            "data.csv"
+        )
+
+    except Exception as e:
+        typer.echo(f"Failed to download dataset: {e}", err=True)
+        return
+
+    dest = Path("data/raw")
+    dest.mkdir(parents=True, exist_ok=True)
+
+    target = dest / "data.csv"
+    df.to_csv(target, index=False)
+    typer.echo(f"Saved DataFrame to {target}")
+
+
+    """try:
+        typer.echo("Downloading dataset from KaggleHub...")
         path_raw = kagglehub.dataset_download("sbhatti/financial-sentiment-analysis")
         path = Path(path_raw)
     except Exception as e:
@@ -178,7 +199,7 @@ def download() -> None:
         file.replace(target)
         typer.echo(f"Copied: {file.name} → {target}")
 
-    typer.echo("Download and copy complete.")
+    typer.echo("Download and copy complete.")"""
 
 
 def create_hf_datasets(data_dir: Path, pretrained_model: str, max_rows: Optional[int] = None):
@@ -197,4 +218,5 @@ def create_hf_datasets(data_dir: Path, pretrained_model: str, max_rows: Optional
 
 
 if __name__ == "__main__":
+    download()
     app()

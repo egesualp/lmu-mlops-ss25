@@ -1,0 +1,49 @@
+# .gcloudignore.api (for API)
+# Large files and directories
+artifacts/
+wandb/
+*.prof
+*.out
+
+# Data (not needed for API)
+data/
+
+# Output and cache
+output_folder/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Git and IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+tests/
+test_wandb_load.py
+coverage.txt
+confusion_matrix.png
+
+# DVC
+.dvc/
+data.dvc
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# Reports and notebooks
+reports/
+notebooks/
