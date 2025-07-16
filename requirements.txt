@@ -75,3 +75,6 @@ scikit-learn
 accelerate>=0.26.0
 fastapi==0.115.12
 uvicorn==0.34.2
+httpx
+pytest
+locust
