@@ -1,0 +1,9 @@
+worker_pool_specs:
+  - machine_spec:
+      machine_type: n1-standard-8
+    replica_count: 1
+    container_spec:
+      image_uri: europe-west3-docker.pkg.dev/mlops-465916/my-container-registry/mlops-train:latest
+      env:
+        - name: WANDB_API_KEY
+          value: d8fb8cf0074e2da88156e837aaf2a2ea6d4b1b5c

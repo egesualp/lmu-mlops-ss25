@@ -1,19 +1,20 @@
-# Base image
 FROM python:3.12-slim
 
-# Install Python
 RUN apt update && \
     apt install --no-install-recommends -y build-essential gcc && \
     apt clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt requirements.txt
 COPY pyproject.toml pyproject.toml
-COPY src/ src/
+COPY api/ api/
 COPY conf/ conf/
-COPY data/ data/
+COPY src/ src/
+
 
 WORKDIR /
 RUN pip install -r requirements.txt
 RUN pip install . --no-deps --no-cache-dir
 
-ENTRYPOINT ["python", "-u", "src/train_hf.py"]
+EXPOSE 8080
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8080"]

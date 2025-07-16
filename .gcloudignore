@@ -1,0 +1,48 @@
+cat > .gcloudignore << EOF
+# Git files
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.out
+*.prof
+wandb/
+
+# Large files that aren't needed for build
+confusion_matrix.png
+coverage.txt
+output_folder/
+reports/
+notebooks/
+artifacts/
+
+# DVC files (but keep the actual data)
+.dvc/
+data.dvc
+
+# Keep the processed data but exclude raw if it's large
+# data/raw/data.csv  # Uncomment if you want to exclude raw data
+
+# Don't exclude the processed data directory
+!data/
+EOF
