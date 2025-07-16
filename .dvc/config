@@ -1,0 +1,5 @@
+[core]
+    remote = storage
+['remote "storage"']
+    url = gs://mlops-financial-sentiment/data
+    version_aware = true

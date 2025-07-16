@@ -1,0 +1,23 @@
+steps:
+# Build API image
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build API image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/mlops-api:latest',
+    '-f',
+    'dockerfiles/api.dockerfile'
+  ]
+
+# Push API image
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push API image'
+  args: [
+    'push',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/mlops-api:latest'
+  ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
