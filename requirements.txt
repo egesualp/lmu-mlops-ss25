@@ -78,3 +78,4 @@ uvicorn==0.34.2
 httpx
 pytest
 locust
+onnxruntime

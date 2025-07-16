@@ -6,6 +6,7 @@ models/
 logs/
 reports/figures/*
 docs/site/
+artifacts/
 
 # test cache
 manual_test/
