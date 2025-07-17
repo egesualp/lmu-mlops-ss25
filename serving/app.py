@@ -15,7 +15,7 @@ def classify_text(text: str, backend: str):
         response = requests.post(
             predict_url,
             json={"text": text},
-            timeout=10,
+            timeout=30,
         )
         if response.status_code == 200:
             return response.json()
