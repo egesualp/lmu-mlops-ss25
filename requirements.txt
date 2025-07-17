@@ -79,3 +79,6 @@ httpx
 pytest
 locust
 onnxruntime
+dvc
+dvc-gs
+google-cloud-storage
