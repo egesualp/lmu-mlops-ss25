@@ -4,18 +4,18 @@ import streamlit as st
 import pandas as pd
 
 def get_backend_url():
-    """Get backend URL from environment variable."""
-    return os.environ.get("BACKEND", None)
+    """Return the static backend URL for the public API."""
+    return "https://financial-sentiment-api-687370715419.europe-west3.run.app"
 
 
 def classify_text(text: str, backend: str):
     """Send text to backend and return prediction + probabilities."""
-    predict_url = f"{backend}/predict/"
+    predict_url = f"{backend}/predict"
     try:
         response = requests.post(
             predict_url,
             json={"text": text},
-            timeout=10,
+            timeout=30,
         )
         if response.status_code == 200:
             return response.json()
@@ -51,19 +51,37 @@ def main():
 
         result = classify_text(text_input, backend)
 
-        if result:
-            prediction = result["prediction"]
-            probabilities = result["probabilities"]
+        if result and "label" in result and "score" in result:
+            prediction = result["label"]
+            score = result["score"]
 
-            st.success(f"**Predicted sentiment:** `{prediction}`")
+            # Choose face based on sentiment and confidence
+            if prediction == "positive":
+                if score > 0.85:
+                    face = "😁"
+                elif score > 0.6:
+                    face = "😀"
+                else:
+                    face = "🙂"
+            elif prediction == "neutral":
+                face = "😐"
+            elif prediction == "negative":
+                if score > 0.85:
+                    face = "😢"
+                elif score > 0.6:
+                    face = "🙁"
+                else:
+                    face = "☹️"
+            else:
+                face = "❓"
 
-            df = pd.DataFrame({
-                "Sentiment": ["negative", "neutral", "positive"],
-                "Probability": probabilities
-            })
-            st.bar_chart(df.set_index("Sentiment"))
+            st.markdown(
+                f"<div style='font-size: 80px; text-align: center;'>{face}</div>",
+                unsafe_allow_html=True
+            )
+            st.success(f"**Predicted sentiment:** `{prediction}`\n\n**Confidence:** {score:.2%}")
         else:
-            st.error("Failed to get prediction from backend.")
+            st.error(f"Failed to get prediction from backend. Response: {result}")
 
 
 if __name__ == "__main__":
