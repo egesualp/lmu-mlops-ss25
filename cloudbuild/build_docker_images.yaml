@@ -1,4 +1,15 @@
 steps:
+# DVC pull to create Data Folder
+- name: 'python:3.10'
+  id: 'Install DVC and pull data'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      pip install dvc
+      pip install dvc-gs
+      dvc pull    
+
 # Build training image
 - name: 'gcr.io/cloud-builders/docker'
   id: 'Build container image'
