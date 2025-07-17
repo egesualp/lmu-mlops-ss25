@@ -1,68 +1,46 @@
-name: CB‐Trigger & Locust
-
-on:
-  push:
-    branches: [ main ]
-
 jobs:
-  trigger-cb:
-    name: Trigger Cloud Build & wait
+  load-test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+    env:
+      # Define your static API URL here:
+      API_URL: https://financial-sentiment-api-687370715419.europe-west3.run.app
 
-      - name: Auth with GCP
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Trigger Cloud Build
-        id: cb
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Wait 15 minutes for deployment to finish
         run: |
-          export CLOUDSDK_CORE_DISABLE_PROMPTS=1
-          BUILD_ID=$(gcloud beta builds triggers run YOUR_TRIGGER_ID \
-            --branch=main --quiet \
-            --format="value(metadata.build.id)")
-          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+          echo "Sleeping for 15 minutes to let deployment settle…"
+          sleep 15m
 
-      - name: Stream CB logs & check status
-        run: |
-          gcloud builds log --stream "$BUILD_ID"
-          STATUS=$(gcloud builds describe "$BUILD_ID" \
-            --format="value(status)")
-          echo "STATUS=$STATUS"
-          if [[ "$STATUS" != "SUCCESS" ]]; then
-            echo "🚨 Cloud Build failed with status $STATUS"
-            exit 1
-          fi
+      - name: Set up Python & Locust
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install Locust
+        run: pip install locust
 
-  load-test:
-    name: Run Locust load test
-    runs-on: ubuntu-latest
-    needs: trigger-cb      # ← waits for the Cloud Build–trigger job above
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with: { python-version: '3.x' }
-      - run: pip install locust
-
-      - name: Extract deployed URL
-        run: |
-          URL=$(gcloud run services describe financial-sentiment-api \
-            --region=europe-west3 \
-            --format='value(status.url)')
-          echo "DEPLOYED_MODEL_URL=$URL" >> $GITHUB_ENV
-
-      - name: Run load test
+      - name: Run load test on deployed model
         env:
-          DEPLOYED_MODEL_URL: ${{ env.DEPLOYED_MODEL_URL }}
+          DEPLOYED_MODEL_URL: ${{ env.API_URL }}
         run: |
           locust -f tests/locustfile.py \
-            --headless -u 50 -r 5 --run-time 5m \
-            --host=$DEPLOYED_MODEL_URL \
+            --headless \
+            -u 50 -r 5 --run-time 5m \
+            --host="$DEPLOYED_MODEL_URL" \
             --csv=/locust/results
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload locust results
+        uses: actions/upload-artifact@v4
         with:
           name: locust-results
           path: /locust
