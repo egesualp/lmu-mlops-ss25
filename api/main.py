@@ -1,11 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 from transformers import AutoTokenizer
+from prometheus_client import Counter, Histogram, Summary, make_asgi_app
 import wandb
 import onnxruntime as ort
 import numpy as np
 import os
+import time
+
+# Define Prometheus metrics
+error_counter = Counter("prediction_error_total", "Number of prediction errors")
+request_counter = Counter("prediction_requests_total", "Number of prediction requests")
+request_latency = Histogram("prediction_latency_seconds", "Prediction latency in seconds")
+review_summary = Summary("review_length_summary", "Length of input reviews")
 
 class PredictRequest(BaseModel):
     text: str
@@ -39,7 +47,7 @@ async def lifespan(app: FastAPI):
     app.state.session = session
     app.state.input_names = input_names
     app.state.output_name = output_name
-    app.state.label_map = {0: "negative", 1: "neutral", 2: "positive"}  # Adjust if needed
+    app.state.label_map = {0: "negative", 1: "neutral", 2: "positive"}
 
     yield
 
@@ -53,29 +61,45 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Mount Prometheus metrics endpoint
+app.mount("/metrics", make_asgi_app())
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Sentiment Analysis of Financial Text API!"}
 
 @app.post("/predict", response_model=PredictResponse)
 async def predict(request: PredictRequest):
-    tokenizer = app.state.tokenizer
-    session = app.state.session
-    input_names = app.state.input_names
-    output_name = app.state.output_name
-    label_map = app.state.label_map
+    request_counter.inc()  # Count total prediction requests
+    review_summary.observe(len(request.text))  # Track review size
 
-    inputs = tokenizer(request.text, return_tensors="np", truncation=True, padding=True)
+    start_time = time.time()  # Start latency timer
+    try:
+        tokenizer = app.state.tokenizer
+        session = app.state.session
+        input_names = app.state.input_names
+        output_name = app.state.output_name
+        label_map = app.state.label_map
 
-    ort_inputs = {
-        name: inputs[name].astype(np.int64) for name in input_names
-    }
+        inputs = tokenizer(request.text, return_tensors="np", truncation=True, padding=True)
 
-    outputs = session.run([output_name], ort_inputs)
-    logits = outputs[0][0]
-    probs = np.exp(logits) / np.sum(np.exp(logits))  # Softmax
-    label_id = int(np.argmax(probs))
-    score = float(np.max(probs))
-    label = label_map.get(label_id, str(label_id))
+        ort_inputs = {
+            name: inputs[name].astype(np.int64) for name in input_names
+        }
 
-    return PredictResponse(label=label, score=score)
+        outputs = session.run([output_name], ort_inputs)
+        logits = outputs[0][0]
+        probs = np.exp(logits) / np.sum(np.exp(logits))  # Softmax
+        label_id = int(np.argmax(probs))
+        score = float(np.max(probs))
+        label = label_map.get(label_id, str(label_id))
+
+        return PredictResponse(label=label, score=score)
+
+    except Exception as e:
+        error_counter.inc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        duration = time.time() - start_time
+        request_latency.observe(duration)  # Record latency
