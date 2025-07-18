@@ -83,3 +83,5 @@ dvc
 dvc-gs
 google-cloud-storage
 prometheus-client==0.22.0
+evidently==0.6.7
+nltk

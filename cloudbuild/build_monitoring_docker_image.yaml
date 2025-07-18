@@ -1,0 +1,48 @@
+steps:
+
+# Build monitoring image
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build Monitoring image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/sentiment-monitoring:latest',
+    '-f',
+    'dockerfiles/sentiment_monitoring.dockerfile'
+  ]
+
+# Push monitoring image
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push Monitoring image'
+  args: [
+    'push',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/sentiment-monitoring:latest'
+  ]
+
+# Deploy to Cloud Run
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'Deploy Monitoring to Cloud Run'
+  args: [
+    'run',
+    'deploy',
+    'sentiment-monitoring',
+    '--image',
+    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/sentiment-monitoring:latest',
+    '--region',
+    'europe-west3',
+    '--platform',
+    'managed',
+    '--allow-unauthenticated',
+    '--memory',
+    '2Gi',
+    '--cpu',
+    '1',
+    '--timeout',
+    '300',
+    '--set-env-vars',
+    'GCS_BUCKET_NAME=sentiment-prediction-data'
+  ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
