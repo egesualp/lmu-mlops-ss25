@@ -29,7 +29,6 @@ async def lifespan(app: FastAPI):
 
     # Download NLTK data if needed
     try:
-        # TODO CHECK WHAT IN NLTK
         nltk.download("words")
         nltk.download("wordnet")
         nltk.download("omw-1.4")
