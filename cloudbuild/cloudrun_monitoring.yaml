@@ -1,0 +1,36 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: financial-sentiment-api
+  annotations:
+    run.googleapis.com/launch-stage: ALPHA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/container-dependencies: '{"collector":["fastapi-app"]}'
+        run.googleapis.com/cpu-throttling: 'false'
+    spec:
+      containers:
+        # Primary FastAPI application container
+        - name: fastapi-app
+          image: europe-west3-docker.pkg.dev/mlops-465916/my-container-registry/mlops-api:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: WANDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: WANDB_API_KEY
+                  key: latest
+          resources:
+            limits:
+              memory: 3Gi
+
+        # Sidecar container for Prometheus monitoring
+        - name: collector
+          image: us-docker.pkg.dev/cloud-ops-agents-artifacts/cloud-run-gmp-sidecar/cloud-run-gmp-sidecar:1.2.0
+          resources:
+            limits:
+              memory: 1Gi

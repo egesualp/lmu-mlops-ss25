@@ -1,15 +1,23 @@
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException
 from google.cloud import storage
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 from transformers import AutoTokenizer
+from prometheus_client import CollectorRegistry, Counter, Histogram, Summary, make_asgi_app
 import wandb
 import onnxruntime as ort
 import numpy as np
 import os
+import time
 import datetime
 import json
 
+MY_REGISTRY = CollectorRegistry()
+# Define Prometheus metrics
+error_counter = Counter("prediction_error_total", "Number of prediction errors", registry=MY_REGISTRY)
+request_counter = Counter("prediction_requests_total", "Number of prediction requests", registry=MY_REGISTRY)
+request_latency = Histogram("prediction_latency_seconds", "Prediction latency in seconds", registry=MY_REGISTRY)
+review_summary = Summary("review_length_summary", "Length of input reviews", registry=MY_REGISTRY)
 
 class PredictRequest(BaseModel):
     text: str
@@ -60,6 +68,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Mount Prometheus metrics endpoint
+app.mount("/metrics", make_asgi_app(registry=MY_REGISTRY))
 
 def save_prediction_gcloud(text: str, label: str, score: float, timestamp: str = None):
     """
@@ -102,6 +112,7 @@ def save_prediction_gcloud(text: str, label: str, score: float, timestamp: str =
         print(f"Error saving prediction to Google Cloud Storage: {e}")
 
 
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Sentiment Analysis of Financial Text API!"}
@@ -109,25 +120,44 @@ async def root():
 
 @app.post("/predict", response_model=PredictResponse)
 async def predict(request: PredictRequest, background_tasks: BackgroundTasks):
+    request_counter.inc()  # Count total prediction requests
+    review_summary.observe(len(request.text))  # Track review size
     tokenizer = app.state.tokenizer
     session = app.state.session
     input_names = app.state.input_names
     output_name = app.state.output_name
     label_map = app.state.label_map
 
-    inputs = tokenizer(request.text, return_tensors="np", truncation=True, padding=True)
+    start_time = time.time()  # Start latency timer
+    try:
+        tokenizer = app.state.tokenizer
+        session = app.state.session
+        input_names = app.state.input_names
+        output_name = app.state.output_name
+        label_map = app.state.label_map
 
-    ort_inputs = {
-        name: inputs[name].astype(np.int64) for name in input_names
-    }
+        inputs = tokenizer(request.text, return_tensors="np", truncation=True, padding=True)
 
-    outputs = session.run([output_name], ort_inputs)
-    logits = outputs[0][0]
-    probs = np.exp(logits) / np.sum(np.exp(logits))  # Softmax
-    label_id = int(np.argmax(probs))
-    score = float(np.max(probs))
-    label = label_map.get(label_id, str(label_id))
+        ort_inputs = {
+            name: inputs[name].astype(np.int64) for name in input_names
+        }
 
-    background_tasks.add_task(save_prediction_gcloud, request.text, label, score)
+        outputs = session.run([output_name], ort_inputs)
+        logits = outputs[0][0]
+        probs = np.exp(logits) / np.sum(np.exp(logits))  # Softmax
+        label_id = int(np.argmax(probs))
+        score = float(np.max(probs))
+        label = label_map.get(label_id, str(label_id))
 
-    return PredictResponse(label=label, score=score)
+        # Add background task to save prediction
+        background_tasks.add_task(save_prediction_gcloud, request.text, label, score)
+
+        return PredictResponse(label=label, score=score)
+
+    except Exception as e:
+        error_counter.inc()
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+    finally:
+        duration = time.time() - start_time
+        request_latency.observe(duration)  # Record latency
