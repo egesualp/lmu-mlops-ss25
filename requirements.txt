@@ -82,3 +82,4 @@ onnxruntime
 dvc
 dvc-gs
 google-cloud-storage
+prometheus-client==0.22.0

@@ -20,21 +20,19 @@ steps:
     'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/mlops-api:latest'
   ]
 
-# Deploy to Cloud Run
+# Deploy to Cloud Run using enhanced monitoring config
+# This will apply full deployment config including memory, environment variables,
+# execution environment, container dependencies (for Prometheus sidecar), etc.
 - name: 'gcr.io/cloud-builders/gcloud'
-  id: 'Deploy to Cloud Run'
+  id: 'Deploy to Cloud Run (monitoring version)'
   args: [
     'run',
-    'deploy',
-    'financial-sentiment-api',
-    '--image',
-    'europe-west3-docker.pkg.dev/$PROJECT_ID/my-container-registry/mlops-api:latest',
-    '--region',
-    'europe-west3',
-    '--platform',
-    'managed',
-    # inject secrets as environment variables
-    '--update-secrets=WANDB_API_KEY=WANDB_API_KEY:latest'
+    'services',
+    'replace',
+    'cloudbuild/cloudrun_monitoring.yaml',
+    '--region=europe-west3',
+    '--platform=managed',
+    '--project=${PROJECT_ID}'
   ]
 
 options:

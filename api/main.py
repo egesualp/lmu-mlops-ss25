@@ -3,7 +3,7 @@ from google.cloud import storage
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 from transformers import AutoTokenizer
-from prometheus_client import Counter, Histogram, Summary, make_asgi_app
+from prometheus_client import CollectorRegistry, Counter, Histogram, Summary, make_asgi_app
 import wandb
 import onnxruntime as ort
 import numpy as np
@@ -12,11 +12,12 @@ import time
 import datetime
 import json
 
+MY_REGISTRY = CollectorRegistry()
 # Define Prometheus metrics
-error_counter = Counter("prediction_error_total", "Number of prediction errors")
-request_counter = Counter("prediction_requests_total", "Number of prediction requests")
-request_latency = Histogram("prediction_latency_seconds", "Prediction latency in seconds")
-review_summary = Summary("review_length_summary", "Length of input reviews")
+error_counter = Counter("prediction_error_total", "Number of prediction errors", registry=MY_REGISTRY)
+request_counter = Counter("prediction_requests_total", "Number of prediction requests", registry=MY_REGISTRY)
+request_latency = Histogram("prediction_latency_seconds", "Prediction latency in seconds", registry=MY_REGISTRY)
+review_summary = Summary("review_length_summary", "Length of input reviews", registry=MY_REGISTRY)
 
 class PredictRequest(BaseModel):
     text: str
@@ -68,7 +69,7 @@ app = FastAPI(
 )
 
 # Mount Prometheus metrics endpoint
-app.mount("/metrics", make_asgi_app())
+app.mount("/metrics", make_asgi_app(registry=MY_REGISTRY))
 
 def save_prediction_gcloud(text: str, label: str, score: float, timestamp: str = None):
     """
@@ -155,7 +156,7 @@ async def predict(request: PredictRequest, background_tasks: BackgroundTasks):
 
     except Exception as e:
         error_counter.inc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     finally:
         duration = time.time() - start_time
