@@ -18,21 +18,23 @@ class TestMyDataset:
     @pytest.fixture
     def sample_data(self):
         """Create sample data for testing."""
-        return pd.DataFrame({
-            'text': [
-                'This is a positive review.',
-                'This is a negative review.',
-                'This is a neutral review.',
-                'Another positive example.',
-                'Another negative example.'
-            ],
-            'label': [1, 0, 2, 1, 0]
-        })
+        return pd.DataFrame(
+            {
+                "text": [
+                    "This is a positive review.",
+                    "This is a negative review.",
+                    "This is a neutral review.",
+                    "Another positive example.",
+                    "Another negative example.",
+                ],
+                "label": [1, 0, 2, 1, 0],
+            }
+        )
 
     @pytest.fixture
     def temp_csv_file(self, sample_data):
         """Create a temporary CSV file with sample data."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
             sample_data.to_csv(f.name, index=False)
             yield f.name
         os.unlink(f.name)
@@ -53,16 +55,16 @@ class TestMyDataset:
         dataset = MyDataset(temp_csv_file)
         item = dataset[0]
 
-        assert 'text' in item
-        assert 'label' in item
-        assert isinstance(item['text'], str)
-        assert isinstance(item['label'], torch.Tensor)
-        assert item['label'].item() in [0, 1, 2]
+        assert "text" in item
+        assert "label" in item
+        assert isinstance(item["text"], str)
+        assert isinstance(item["label"], torch.Tensor)
+        assert item["label"].item() in [0, 1, 2]
 
     def test_dataset_label_mapping(self, temp_csv_file):
         """Test that labels are properly mapped."""
         dataset = MyDataset(temp_csv_file)
-        labels = [dataset[i]['label'].item() for i in range(len(dataset))]
+        labels = [dataset[i]["label"].item() for i in range(len(dataset))]
 
         # Check that all labels are integers and in expected range
         assert all(isinstance(label, int) for label in labels)
@@ -70,8 +72,8 @@ class TestMyDataset:
 
     def test_dataset_empty_file(self):
         """Test handling of empty CSV file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
-            f.write('text,label\n')  # Only header
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+            f.write("text,label\n")  # Only header
             f.flush()
 
             with pytest.raises(pd.errors.EmptyDataError):
@@ -81,9 +83,9 @@ class TestMyDataset:
 
     def test_dataset_missing_columns(self):
         """Test handling of CSV with missing required columns."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
-            f.write('text\n')  # Missing label column
-            f.write('Some text\n')
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+            f.write("text\n")  # Missing label column
+            f.write("Some text\n")
             f.flush()
 
             with pytest.raises(KeyError):
@@ -109,19 +111,30 @@ class TestPreprocessData:
     @pytest.fixture
     def sample_raw_data(self):
         """Create sample raw data for preprocessing."""
-        return pd.DataFrame({
-            'Sentence': [
-                'This is a positive review!',
-                'This is a negative review.',
-                'This is a neutral review.',
-                'Another positive example!',
-                'Another negative example.',
-                'Yet another positive case.',
-                'Yet another negative case.',
-                'A neutral example here.'
-            ],
-            'Sentiment': ['positive', 'negative', 'neutral', 'positive', 'negative', 'positive', 'negative', 'neutral']
-        })
+        return pd.DataFrame(
+            {
+                "Sentence": [
+                    "This is a positive review!",
+                    "This is a negative review.",
+                    "This is a neutral review.",
+                    "Another positive example!",
+                    "Another negative example.",
+                    "Yet another positive case.",
+                    "Yet another negative case.",
+                    "A neutral example here.",
+                ],
+                "Sentiment": [
+                    "positive",
+                    "negative",
+                    "neutral",
+                    "positive",
+                    "negative",
+                    "positive",
+                    "negative",
+                    "neutral",
+                ],
+            }
+        )
 
     @pytest.fixture
     def temp_input_dir(self, sample_raw_data):
@@ -161,8 +174,8 @@ class TestPreprocessData:
         assert total_rows == 8
 
         # Check that labels are properly encoded
-        all_labels = set(train_df['label'].tolist() + test_df['label'].tolist() + eval_df['label'].tolist())
-        assert all_labels == {'positive', 'negative', 'neutral'}
+        all_labels = set(train_df["label"].tolist() + test_df["label"].tolist() + eval_df["label"].tolist())
+        assert all_labels == {"positive", "negative", "neutral"}
 
     def test_preprocess_data_invalid_ratios(self, temp_input_dir, temp_output_dir):
         """Test handling of invalid split ratios."""
@@ -184,16 +197,18 @@ class TestCreateHFDatasets:
     @pytest.fixture
     def sample_processed_data(self):
         """Create sample processed data for HF dataset creation."""
-        return pd.DataFrame({
-            'text': [
-                'This is a positive review.',
-                'This is a negative review.',
-                'This is a neutral review.',
-                'Another positive example.',
-                'Another negative example.'
-            ],
-            'label': [1, 0, 2, 1, 0]
-        })
+        return pd.DataFrame(
+            {
+                "text": [
+                    "This is a positive review.",
+                    "This is a negative review.",
+                    "This is a neutral review.",
+                    "Another positive example.",
+                    "Another negative example.",
+                ],
+                "label": [1, 0, 2, 1, 0],
+            }
+        )
 
     @pytest.fixture
     def temp_data_dir(self, sample_processed_data):
@@ -210,8 +225,8 @@ class TestCreateHFDatasets:
 
             yield Path(temp_dir)
 
-    @patch('src.data.AutoTokenizer.from_pretrained')
-    @patch('src.data.HFDataset')
+    @patch("src.data.AutoTokenizer.from_pretrained")
+    @patch("src.data.HFDataset")
     def test_create_hf_datasets_basic(self, mock_hf_dataset, mock_tokenizer, temp_data_dir):
         """Test basic HF dataset creation."""
         # Mock the tokenizer
@@ -223,9 +238,7 @@ class TestCreateHFDatasets:
         mock_eval_ds = MagicMock()
         mock_hf_dataset.side_effect = [mock_train_ds, mock_eval_ds]
 
-        train_ds, eval_ds, tokenizer, num_labels = create_hf_datasets(
-            temp_data_dir, "bert-base-uncased"
-        )
+        train_ds, eval_ds, tokenizer, num_labels = create_hf_datasets(temp_data_dir, "bert-base-uncased")
 
         # Check that tokenizer was called
         mock_tokenizer.assert_called_once_with("bert-base-uncased")
@@ -239,8 +252,8 @@ class TestCreateHFDatasets:
         assert tokenizer == mock_tokenizer_instance
         assert num_labels == 3
 
-    @patch('src.data.AutoTokenizer.from_pretrained')
-    @patch('src.data.HFDataset')
+    @patch("src.data.AutoTokenizer.from_pretrained")
+    @patch("src.data.HFDataset")
     def test_create_hf_datasets_with_max_rows(self, mock_hf_dataset, mock_tokenizer, temp_data_dir):
         """Test HF dataset creation with max_rows limit."""
         mock_tokenizer_instance = MagicMock()
@@ -250,9 +263,7 @@ class TestCreateHFDatasets:
         mock_eval_ds = MagicMock()
         mock_hf_dataset.side_effect = [mock_train_ds, mock_eval_ds]
 
-        train_ds, eval_ds, tokenizer, num_labels = create_hf_datasets(
-            temp_data_dir, "bert-base-uncased", max_rows=2
-        )
+        train_ds, eval_ds, tokenizer, num_labels = create_hf_datasets(temp_data_dir, "bert-base-uncased", max_rows=2)
 
         # Check that max_rows was passed to dataset creation
         assert mock_hf_dataset.call_count == 2
@@ -271,22 +282,34 @@ class TestDataIntegration:
     @pytest.fixture
     def complete_pipeline_data(self):
         """Create data for testing the complete pipeline."""
-        return pd.DataFrame({
-            'Sentence': [
-                'This is a positive review!',
-                'This is a negative review.',
-                'This is a neutral review.',
-                'Another positive example!',
-                'Another negative example.',
-                'Yet another positive case.',
-                'Yet another negative case.',
-                'A neutral example here.',
-                'More positive content.',
-                'More negative content.'
-            ],
-            'Sentiment': ['positive', 'negative', 'neutral', 'positive', 'negative',
-                         'positive', 'negative', 'neutral', 'positive', 'negative']
-        })
+        return pd.DataFrame(
+            {
+                "Sentence": [
+                    "This is a positive review!",
+                    "This is a negative review.",
+                    "This is a neutral review.",
+                    "Another positive example!",
+                    "Another negative example.",
+                    "Yet another positive case.",
+                    "Yet another negative case.",
+                    "A neutral example here.",
+                    "More positive content.",
+                    "More negative content.",
+                ],
+                "Sentiment": [
+                    "positive",
+                    "negative",
+                    "neutral",
+                    "positive",
+                    "negative",
+                    "positive",
+                    "negative",
+                    "neutral",
+                    "positive",
+                    "negative",
+                ],
+            }
+        )
 
     def test_complete_pipeline(self, complete_pipeline_data):
         """Test the complete data pipeline from raw data to HF datasets."""
@@ -318,7 +341,7 @@ class TestDataIntegration:
             all_labels = set()
             for dataset in [train_dataset, test_dataset, eval_dataset]:
                 for i in range(len(dataset)):
-                    all_labels.add(dataset[i]['label'].item())
+                    all_labels.add(dataset[i]["label"].item())
 
             assert all_labels == {0, 1, 2}  # Encoded labels
 

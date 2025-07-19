@@ -3,6 +3,7 @@
 ## Live Demo
 
 **Frontend Application**: [https://frontend-891096115648.europe-west1.run.app/](https://frontend-891096115648rope-west1.run.app/)
+
 **Inference API**: [https://financial-sentiment-api-687370715419.europe-west3.run.app/](https://financial-sentiment-api-687370715419.europe-west3.run.app/)
 
 ## Goal

@@ -3,6 +3,7 @@ from api.main import app
 
 client = TestClient(app)
 
+
 def test_read_root():
     with TestClient(app) as client:
         response = client.get("/")

@@ -6,6 +6,7 @@ from loguru import logger
 
 app = typer.Typer()
 
+
 def dataset_statistics(datadir: Path = Path("data/processed")) -> None:
     """Compute and log dataset statistics and plots for text-based sentiment data."""
 
@@ -50,6 +51,7 @@ def dataset_statistics(datadir: Path = Path("data/processed")) -> None:
 
         print(f"Label counts:\n{label_counts.to_string()}")
         print(f"Saved: {split}_text_length.png, {split}_label_distribution.png")
+
 
 if __name__ == "__main__":
     app.command()(dataset_statistics)

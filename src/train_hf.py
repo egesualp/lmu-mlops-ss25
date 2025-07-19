@@ -19,6 +19,7 @@ from model import create_hf_model
 # Load accuracy metric once
 accuracy_metric = evaluate.load("accuracy")
 
+
 def setup_logging(cfg: DictConfig, logging_choice: str):
     """
     Setup logging based on configuration.
@@ -34,12 +35,7 @@ def setup_logging(cfg: DictConfig, logging_choice: str):
         log.remove()
 
         # Add console handler
-        log.add(
-            sys.stdout,
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
-            level="INFO",
-            colorize=True
-        )
+        log.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO", colorize=True)
 
         # Add file handler with rotation
         log.add(
@@ -48,7 +44,7 @@ def setup_logging(cfg: DictConfig, logging_choice: str):
             level="INFO",
             rotation="10 MB",
             retention="7 days",
-            compression="gz"
+            compression="gz",
         )
 
         log.info("Loguru logging configured")
@@ -61,10 +57,11 @@ def setup_logging(cfg: DictConfig, logging_choice: str):
             tags=["bert", "sentiment", "financial"],
             notes="BERT fine-tuning for financial sentiment analysis",
             resume="allow",
-            config=dict(cfg)  # Log the entire config
+            config=dict(cfg),  # Log the entire config
         )
 
         log.info("Wandb logging configured")
+
 
 def compute_metrics(eval_pred):
     """
@@ -74,6 +71,7 @@ def compute_metrics(eval_pred):
     predictions = np.argmax(predictions, axis=1)
 
     return accuracy_metric.compute(predictions=predictions, references=labels)
+
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config_hf")
 def train(cfg: DictConfig):
@@ -143,9 +141,7 @@ def train(cfg: DictConfig):
     if logging_choice in ["loguru", "both"]:
         log.info("Loading datasets...")
 
-    train_ds, eval_ds, tokenizer, num_labels = create_hf_datasets(
-        data_dir, pretrained_model, max_rows
-    )
+    train_ds, eval_ds, tokenizer, num_labels = create_hf_datasets(data_dir, pretrained_model, max_rows)
 
     if logging_choice in ["loguru", "both"]:
         log.info("Dataset loaded successfully")
@@ -219,7 +215,7 @@ def train(cfg: DictConfig):
         metric_for_best_model="eval_accuracy",
         greater_is_better=True,
         report_to=["wandb"] if logging_choice == "wandb" else [],
-        seed=seed
+        seed=seed,
     )
 
     data_collator = DataCollatorWithPadding(tokenizer)
@@ -279,7 +275,7 @@ def train(cfg: DictConfig):
                 artifact = wandb.Artifact(
                     name=f"model-{experiment_name}",
                     type="model",
-                    description="Fine-tuned BERT model for financial sentiment analysis"
+                    description="Fine-tuned BERT model for financial sentiment analysis",
                 )
                 artifact.add_dir("models/final")
                 wandb.log_artifact(artifact)
@@ -292,6 +288,7 @@ def train(cfg: DictConfig):
 
     if logging_choice in ["wandb", "both"]:
         wandb.finish()
+
 
 if __name__ == "__main__":
     train()

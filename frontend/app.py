@@ -3,6 +3,7 @@ import requests
 import streamlit as st
 import pandas as pd
 
+
 def get_backend_url():
     """Return the static backend URL for the public API."""
     return "https://financial-sentiment-api-687370715419.europe-west3.run.app"
@@ -38,7 +39,7 @@ def main():
         return
 
     st.title("💬 Financial Sentiment Classifier")
-    
+
     # Debug: Show backend URL
     st.info(f"🔗 Backend URL: {backend}")
 
@@ -75,10 +76,7 @@ def main():
             else:
                 face = "❓"
 
-            st.markdown(
-                f"<div style='font-size: 80px; text-align: center;'>{face}</div>",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"<div style='font-size: 80px; text-align: center;'>{face}</div>", unsafe_allow_html=True)
             st.success(f"**Predicted sentiment:** `{prediction}`\n\n**Confidence:** {score:.2%}")
         else:
             st.error(f"Failed to get prediction from backend. Response: {result}")

@@ -38,6 +38,7 @@ def download(ctx: Context) -> None:
     """Download dataset from KaggleHub."""
     ctx.run("process-data download", echo=True, pty=not WINDOWS)
 
+
 @task
 def preprocess_data(ctx: Context) -> None:
     """Preprocess data using the Typer CLI."""
