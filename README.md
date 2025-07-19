@@ -132,6 +132,10 @@ The directory structure of the project looks like this:
 ├── requirements_tests.txt # Testing dependencies
 └── tasks.py              # Project automation tasks (Invoke)
 ```
+---
+
+Created using mlops_template, a cookiecutter template for getting started with Machine Learning Operations (MLOps).
+Edited according to project needs and structures.
 
  Usage & Quickstart
 
@@ -289,7 +293,3 @@ Please refer to [frontend/README.md](frontend/README.md) for instructions and de
 - For Docker issues, ensure Docker is running and you have sufficient permissions.
 - For API errors, check logs in the container or `logs/` directory.
 
----
-
-Created using mlops_template, a cookiecutter template for getting started with Machine Learning Operations (MLOps).
-Edited according to project needs and structures.
