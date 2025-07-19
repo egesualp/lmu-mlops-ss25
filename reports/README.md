@@ -635,6 +635,13 @@ We implemented these features because they complete the MLOps cycle - the drift 
 >
 > Answer:
 
+![this figure](figures/diagram.png)
+
+The starting point of our diagram is our local development environment, where we integrated Weights & Biases (W&B) for experiment tracking, Hydra for configuration management, and PyTorch with HuggingFace Transformers as our core ML framework. Our development cycle revolves around iterative model training using BERT for financial sentiment analysis, with multiple configuration setups for different training scenarios. <br>
+Whenever we commit code and push to GitHub, it automatically triggers our GitHub Actions workflows that run comprehensive tests, generate dataset statistics, and initiate the deployment pipeline. From there, the diagram shows how our code flows into the Docker containerization step, where we build three specialized containers: training containers (train.dockerfile), API containers (api.dockerfile), and monitoring containers (monitoring.dockerfile). <br>
+These Docker images are then processed by Google Cloud Build, which automatically pushes them to Artifact Registry at europe-west3-docker.pkg.dev. The training images get deployed to Vertex AI using n1-standard-8 instances for scalable model training and hyperparameter sweeps, while the API and monitoring images are deployed to Cloud Run for serverless, auto-scaling production services. <br>
+Our trained models are versioned and stored in WandB Artifacts as our model registry, with production-ready models converted to ONNX format for optimized inference. The production environment consists of a FastAPI service for sentiment predictions, an Evidently AI-powered monitoring service for drift detection, and a Streamlit frontend for user interaction. <br>
+When users interact with our system through either the web interface or direct API calls, their input text and the resulting predictions are automatically logged to Google Cloud Storage in the sentiment-prediction-data bucket. This data feeds back into our drift analysis system, which continuously compares incoming data against our training distribution to detect model degradation, completing the MLOps feedback loop and ensuring long-term model reliability in production. <br>
 
 ### Question 30
 
