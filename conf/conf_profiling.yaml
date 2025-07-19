@@ -1,0 +1,48 @@
+hydra:
+  run:
+    dir: logs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: logs/multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
+
+# Experiment general settings
+experiment_name: run_financial_bert
+epochs: 1  # More epochs for better convergence
+batch_size: 16
+
+# Data-related configs
+data:
+  data_dir: data/processed
+  max_rows: 1000
+
+# Model hyperparameters
+model:
+  lr: 0.00002  # Much lower LR for BERT fine-tuning
+  pretrained_model: bert-base-uncased
+  dropout: 0.3
+  weight_decay: 0.01  # L2 regularization
+  warmup_steps: 100  # Learning rate warmup steps
+  scheduler: "linear"  # Learning rate scheduler: linear, cosine, cosine_with_restarts, polynomial, constant, constant_with_warmup
+  max_grad_norm: 1.0  # Gradient clipping
+  label_smoothing: 0.0  # Label smoothing factor
+  optim: "adamw_torch"  # Optimizer: adamw_torch, adamw_hf, adafactor, sgd
+  adam_beta1: 0.9  # Adam optimizer beta1
+  adam_beta2: 0.999  # Adam optimizer beta2
+  adam_epsilon: 1e-8  # Adam optimizer epsilon
+  # Additional training parameters
+  dataloader_num_workers: 0  # Number of workers for data loading
+  dataloader_pin_memory: true  # Pin memory for faster data transfer to GPU
+  remove_unused_columns: true  # Remove unused columns from datasets
+  group_by_length: false  # Group sequences by length for efficiency
+  fp16: false  # Use fp16 precision for faster training
+  bf16: false  # Use bfloat16 precision (alternative to fp16)
+  dataloader_drop_last: false  # Drop last incomplete batch
+  logging_steps: 500  # Log every N steps
+  save_total_limit: 3  # Keep only the best 3 checkpoints
+  full_determinism: false  # Full determinism for reproducibility
+seed: 42
+eval_strategy: epoch
+logging: both  # Options: loguru, wandb, both, none
+save_strategy: none  # or 'end' or 'checkpoint'
+enable_profiling: true
+max_profile_steps: 3
