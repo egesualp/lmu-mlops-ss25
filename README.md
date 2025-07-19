@@ -133,4 +133,3 @@ The directory structure of the project looks like this:
 
 Created using mlops_template, a cookiecutter template for getting started with Machine Learning Operations (MLOps).
 Edited according to project needs and structures.
-
