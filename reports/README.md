@@ -400,8 +400,20 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 17 fill here ---
-
+We used the following six GCP services: Artifact Registry, Cloud Storage, Secret Manager, Vertex AI, Cloud Run, and Cloud Build.<br>
+<br>
+**Artifact Registry** is used for storing and managing Docker container images at `europe-west3-docker.pkg.dev/mlops-465916/my-container-registry/`, hosting our training, API, and monitoring container images for deployment. <br>
+<br>
+**Cloud Storage** serves multiple purposes: DVC remote storage at `gs://mlops-financial-sentiment/data` for data versioning, prediction data storage in sentiment-prediction-data bucket for monitoring, and training data storage in `mlops-project-bucket1` for the monitoring service to access historical data.<br>
+<br>
+**Secret Manager** is used for securely storing sensitive information like the `WANDB API` key, referenced in our Vertex AI and Cloud Run configurations via `secretKeyRef` to avoid exposing secrets in code. <br>
+<br>
+**Vertex AI** handles our model training infrastructure through custom jobs defined in `vertex_config.yaml` and `vertex_sweep_config.yaml`, enabling scalable distributed training and hyperparameter optimization sweeps on Google's managed ML platform. <br>
+<br> 
+**Cloud Run** provides serverless deployment for our FastAPI-based sentiment analysis API and monitoring service, with auto-scaling capabilities and integrated Prometheus monitoring through sidecar containers as configured in `cloudrun_monitoring.yaml`. <br>
+<br> 
+**Cloud Build** orchestrates our CI/CD pipeline with multiple build configurations (`build_api_docker_image.yaml`, `build_docker_images.yaml`, `build_monitoring_docker_image.yaml`) that automatically build and deploy our services when code changes are pushed to the main branch. <br>
+'
 ### Question 18
 
 > **The backbone of GCP is the Compute engine. Explained how you made use of this service and what type of VMs**
@@ -415,34 +427,39 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 18 fill here ---
+We used Compute Engine indirectly through Vertex AI for our model training workloads rather than directly managing VMs. Our training jobs run on n1-standard-8 instances as specified in both `vertex_config.yaml` and `vertex_sweep_config.yaml` configurations. These are 8-vCPU machines with 30GB of memory, providing sufficient computational power for fine-tuning BERT models on financial sentiment data. <br> <br>
+We started the training using a custom container hosted at `europe-west3-docker.pkg.dev/mlops-465916/my-container-registry/mlops-train:latest`, which includes our complete training environment with PyTorch, Transformers, and all dependencies. The containerized approach ensures consistent execution environments across different training runs and hyperparameter sweeps. <br> <br>
+The Vertex AI service abstracts away the Compute Engine management, automatically provisioning and de-provisioning VM instances based on our job requirements. This approach provides the scalability benefits of Compute Engine while eliminating the operational overhead of manual VM management, making it ideal for our MLOps training workflows where we need reliable, repeatable model training at scale. <br> 
 
 ### Question 19
 
 > **Insert 1-2 images of your GCP bucket, such that we can see what data you have stored in it.**
-> **You can take inspiration from [this figure](figures/bucket.png).**
+> **You can take inspiration from [this figure](figures/bucket_example.png).**
 >
 > Answer:
 
---- question 19 fill here ---
+![bucket](figures/bucket.png) <br>
+![bucket-predictions](figures/bucket2.png)
 
 ### Question 20
 
 > **Upload 1-2 images of your GCP artifact registry, such that we can see the different docker images that you have**
-> **stored. You can take inspiration from [this figure](figures/registry.png).**
+> **stored. You can take inspiration from [this figure](figures/registry_example.png).**
 >
 > Answer:
 
---- question 20 fill here ---
+![ArtifactRegistry](figures/registry.png) <br>
+![ArtifactRegistry2](figures/registry2.png)
+
 
 ### Question 21
 
 > **Upload 1-2 images of your GCP cloud build history, so we can see the history of the images that have been build in**
-> **your project. You can take inspiration from [this figure](figures/build.png).**
+> **your project. You can take inspiration from [this figure](figures/build_example.png).**
 >
 > Answer:
 
---- question 21 fill here ---
+![this figure](figures/build.png)
 
 ### Question 22
 
@@ -457,7 +474,9 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 22 fill here ---
+Yes, we successfully managed to train our model in the cloud using Vertex AI. We implemented this through custom training jobs defined in `vertex_config.yaml` and `vertex_sweep_config.yaml` configurations.
+We containerized our training environment using the `train.dockerfile`, which packages our complete ML pipeline including PyTorch, Transformers, and all dependencies into a Docker image stored in Artifact Registry at `europe-west3-docker.pkg.dev/mlops-465916/my-container-registry/mlops-train:latest`
+We chose Vertex AI over direct Compute Engine because it provides managed ML infrastructure with automatic scaling, integrated experiment tracking, and seamless container orchestration. The service handles VM provisioning/de-provisioning automatically,
 
 ## Deployment
 
@@ -474,7 +493,11 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 23 fill here ---
+Yes, we successfully managed to write an API for our model using FastAPI. We implemented this in api/main.py with several production-ready features. <br>
+Our API loads ONNX-optimized models from WandB artifacts for faster inference, automatically downloading the latest model version at startup. The main endpoint /predict accepts text input and returns sentiment predictions with confidence scores using Pydantic models for request/response validation. <br>
+We added several special production features: Prometheus metrics integration for monitoring request latency, error rates, and throughput; automatic prediction logging to Cloud Storage for model monitoring and data collection; background tasks for non-blocking operations; and a health check endpoint for deployment monitoring. <br>
+The API is containerized using api.dockerfile and deployed on Google Cloud Run with auto-scaling capabilities. We implemented a sidecar container architecture with Prometheus metric collection as defined in cloudrun_monitoring.yaml, enabling comprehensive application monitoring. <br>
+Additionally, we created a separate monitoring service (sentiment_monitoring.py) that uses Evidently AI for data drift detection by comparing incoming predictions against training data stored in Cloud Storage. The entire setup includes Secret Manager integration for secure API key management and a Streamlit frontend for user interaction, creating a complete end-to-end ML serving solution.
 
 ### Question 24
 
@@ -490,7 +513,15 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 24 fill here ---
+Yes, we successfully managed to deploy our API both locally and in the cloud using Google Cloud Run.
+For deployment, we wrapped our model into a FastAPI application (api/main.py) containerized with Docker. We first tested locally by building the container using dockerfiles/api.dockerfile and running it with docker run, which worked successfully for development and testing. <br> <br>
+For cloud deployment, we used Google Cloud Run as a serverless platform. Our deployment is automated through Cloud Build pipelines defined in build_api_docker_image.yaml, which builds the container image, pushes it to Artifact Registry, and deploys it also using the cloudrun_monitoring.yaml configuration with auto-scaling and monitoring capabilities. <br> <br>
+Our live API is accessible at: https://financial-sentiment-api-687370715419.europe-west3.run.app
+To invoke the service, users can call: <br>
+`curl -X POST "https://financial-sentiment-api-687370715419.europe-west3.run.app/predict" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "The company reported strong quarterly earnings"}'` <br>
+We also deployed a Streamlit frontend at https://frontend-891096115648.europe-west1.run.app/ that provides a user-friendly web interface for interacting with the API.
 
 ### Question 25
 
@@ -505,7 +536,15 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 25 fill here ---
+Yes, we performed both unit testing and load testing of our API. <br> <br>
+For unit testing, we used FastAPI's TestClient in `tests/test_api.py`. Our tests verify the root endpoint returns the correct welcome message and the /predict endpoint properly accepts financial text input and returns valid sentiment predictions with labels and confidence scores. We integrated these tests into our GitHub Actions CI/CD pipeline through tests.yaml to ensure code quality on every commit. <br> <br>
+For load testing, we used Locust with a custom test file `tests/locustfile.py` that simulates realistic user behavior. The load test randomly selects from financial text samples like "The company's profits increased this quarter" and "Stock prices fell sharply after the announcement" to test prediction performance under load. <br> <br>
+Our automated load testing runs through GitHub Actions `load_api_test.yaml` with the following configuration:
+50 concurrent users
+5 users spawned per second
+5-minute test duration
+Tests against our live API
+The results showed our Cloud Run deployment successfully handled the concurrent load without crashes, benefiting from auto-scaling capabilities. Locust results are automatically collected and stored as artifacts for performance analysis and monitoring API responsiveness under various load conditions.
 
 ### Question 26
 
@@ -539,7 +578,9 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 27 fill here ---
+Group member 1 (Ege Süalp) and Group member 2 (Celal Berke Can) used approximately 20 euro credits in total during the development of this MLOps project on Google Cloud Platform. <br><br>
+The service costing the most was Vertex AI due to the compute-intensive model training workloads. Training BERT models for financial sentiment analysis required n1-standard-8 instances running for extended periods, especially during hyperparameter sweeps. The underlying Compute Engine instances consumed the bulk of our credits since transformer model fine-tuning is computationally expensive. Secondary costs came from Artifact Registry for storing multiple Docker images and Cloud Run for API hosting, though these were minimal due to serverless pricing. <br><br>
+Working in the cloud was highly beneficial for our MLOps pipeline. It provided automatic scaling, managed infrastructure, and seamless integration between services without manual VM management. The pay-as-you-use model was cost-effective for our project scope, and services like Secret Manager and Cloud Build eliminated security and deployment complexities. <br><br>
 
 ### Question 28
 
@@ -555,7 +596,12 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 28 fill here ---
+**Drift Detection System** <br>
+We implemented a comprehensive drift detection service in `sentiment_monitoring.py` using Evidently AI. This service continuously monitors our deployed model for data drift and performance degradation by comparing incoming prediction requests against our original training data stored in Cloud Storage `mlops-project-bucket1`. The system generates drift reports that track target drift and text evaluation metrics, helping us detect when the model's input distribution changes and when retraining might be necessary. This is crucial for maintaining model performance in production as financial language and sentiment patterns evolve over time.<br><br>
+**Streamlit Frontend Application**<br><br>
+We created a user-friendly Streamlit web application `frontend/app.py` deployed on Cloud Run at https://frontend-891096115648.europe-west1.run.app/. The frontend provides an intuitive interface where users can input financial text and receive real-time sentiment predictions without needing API knowledge. It connects seamlessly to our FastAPI backend, displays prediction confidence scores.<br><br>
+We implemented these features because they complete the MLOps cycle - the drift detection ensures long-term model reliability, while the frontend makes our ML service accessible to non-technical users, demonstrating a production-ready end-to-end solution rather than just a technical proof-of-concept.
+
 
 ### Question 29
 
@@ -572,7 +618,6 @@ We primarily used the VSCode Debugger for step-by-step debugging, along with log
 >
 > Answer:
 
---- question 29 fill here ---
 
 ### Question 30
 
