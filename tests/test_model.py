@@ -18,12 +18,12 @@ class TestClassifier:
     def sample_batch(self):
         """Create a sample batch for testing."""
         return {
-            'text': [
-                'This is a positive review.',
-                'This is a negative review.',
-                'This is a neutral review.',
-                'Another positive example.',
-                'Another negative example.'
+            "text": [
+                "This is a positive review.",
+                "This is a negative review.",
+                "This is a neutral review.",
+                "Another positive example.",
+                "Another negative example.",
             ]
         }
 
@@ -33,10 +33,10 @@ class TestClassifier:
         assert isinstance(model, torch.nn.Module)
 
         # Check that model has the expected components
-        assert hasattr(model, 'bert')
-        assert hasattr(model, 'dropout')
-        assert hasattr(model, 'classifier')
-        assert hasattr(model, 'tokenizer')
+        assert hasattr(model, "bert")
+        assert hasattr(model, "dropout")
+        assert hasattr(model, "classifier")
+        assert hasattr(model, "tokenizer")
 
     def test_classifier_forward_pass(self, sample_batch):
         """Test forward pass through the classifier."""
@@ -44,7 +44,7 @@ class TestClassifier:
         model.eval()  # Set to evaluation mode
 
         with torch.no_grad():
-            outputs = model(sample_batch['text'])
+            outputs = model(sample_batch["text"])
 
         # Check output shape
         assert outputs.shape == (5, 3)  # 5 samples, 3 classes
@@ -60,13 +60,13 @@ class TestClassifier:
         model.eval()
 
         # Test single sample
-        single_text = ['This is a test.']
+        single_text = ["This is a test."]
         with torch.no_grad():
             output = model(single_text)
         assert output.shape == (1, 3)
 
         # Test multiple samples
-        multiple_texts = ['Text 1.', 'Text 2.', 'Text 3.', 'Text 4.']
+        multiple_texts = ["Text 1.", "Text 2.", "Text 3.", "Text 4."]
         with torch.no_grad():
             output = model(multiple_texts)
         assert output.shape == (4, 3)
@@ -76,22 +76,22 @@ class TestClassifier:
         model = Classifier()
 
         # Test on CPU
-        cpu_output = model(['Test text.'])
-        assert cpu_output.device.type == 'cpu'
+        cpu_output = model(["Test text."])
+        assert cpu_output.device.type == "cpu"
 
         # Test on GPU if available
         if torch.cuda.is_available():
             model_gpu = Classifier()
             model_gpu = model_gpu.cuda()
-            gpu_output = model_gpu(['Test text.'])
-            assert gpu_output.device.type == 'cuda'
+            gpu_output = model_gpu(["Test text."])
+            assert gpu_output.device.type == "cuda"
 
     def test_classifier_gradient_flow(self, sample_batch):
         """Test that gradients flow through the model."""
         model = Classifier()
         model.train()  # Set to training mode
 
-        outputs = model(sample_batch['text'])
+        outputs = model(sample_batch["text"])
         loss = torch.nn.functional.cross_entropy(outputs, torch.randint(0, 3, (5,)))
         loss.backward()
 
@@ -116,11 +116,11 @@ class TestClassifier:
 
         # Get outputs in training mode
         model.train()
-        train_outputs = model(sample_batch['text'])
+        train_outputs = model(sample_batch["text"])
 
         # Get outputs in evaluation mode
         model.eval()
-        eval_outputs = model(sample_batch['text'])
+        eval_outputs = model(sample_batch["text"])
 
         # Outputs should be different due to dropout
         assert not torch.allclose(train_outputs, eval_outputs, atol=1e-6)
@@ -131,7 +131,7 @@ class TestClassifier:
         model.eval()
 
         with torch.no_grad():
-            outputs = model(sample_batch['text'])
+            outputs = model(sample_batch["text"])
 
         # Check that outputs are finite
         assert torch.all(torch.isfinite(outputs))
@@ -146,10 +146,10 @@ class TestClassifier:
 
         # Get original output
         with torch.no_grad():
-            original_output = model(sample_batch['text'])
+            original_output = model(sample_batch["text"])
 
         # Save model
-        with tempfile.NamedTemporaryFile(suffix='.pt', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".pt", delete=False) as f:
             torch.save(model.state_dict(), f.name)
             temp_path = f.name
 
@@ -161,7 +161,7 @@ class TestClassifier:
 
             # Get output from loaded model
             with torch.no_grad():
-                loaded_output = new_model(sample_batch['text'])
+                loaded_output = new_model(sample_batch["text"])
 
             # Check that outputs are the same
             assert torch.allclose(original_output, loaded_output, atol=1e-6)
@@ -174,7 +174,7 @@ class TestClassifier:
 class TestCreateHFModel:
     """Test cases for create_hf_model function."""
 
-    @patch('src.model.AutoModelForSequenceClassification.from_pretrained')
+    @patch("src.model.AutoModelForSequenceClassification.from_pretrained")
     def test_create_hf_model_basic(self, mock_from_pretrained):
         """Test basic HF model creation."""
         # Mock the model
@@ -184,36 +184,25 @@ class TestCreateHFModel:
         model = create_hf_model("bert-base-uncased", 3)
 
         # Check that from_pretrained was called correctly
-        mock_from_pretrained.assert_called_once_with(
-            "bert-base-uncased",
-            num_labels=3
-        )
+        mock_from_pretrained.assert_called_once_with("bert-base-uncased", num_labels=3)
 
         # Check return value
         assert model == mock_model
 
-    @patch('src.model.AutoModelForSequenceClassification.from_pretrained')
+    @patch("src.model.AutoModelForSequenceClassification.from_pretrained")
     def test_create_hf_model_different_pretrained_models(self, mock_from_pretrained):
         """Test HF model creation with different pretrained models."""
         mock_model = MagicMock()
         mock_from_pretrained.return_value = mock_model
 
         # Test with different models
-        models_to_test = [
-            "bert-base-uncased",
-            "distilbert-base-uncased",
-            "roberta-base",
-            "albert-base-v2"
-        ]
+        models_to_test = ["bert-base-uncased", "distilbert-base-uncased", "roberta-base", "albert-base-v2"]
 
         for model_name in models_to_test:
             create_hf_model(model_name, 3)
-            mock_from_pretrained.assert_called_with(
-                model_name,
-                num_labels=3
-            )
+            mock_from_pretrained.assert_called_with(model_name, num_labels=3)
 
-    @patch('src.model.AutoModelForSequenceClassification.from_pretrained')
+    @patch("src.model.AutoModelForSequenceClassification.from_pretrained")
     def test_create_hf_model_different_num_labels(self, mock_from_pretrained):
         """Test HF model creation with different numbers of labels."""
         mock_model = MagicMock()
@@ -222,12 +211,9 @@ class TestCreateHFModel:
         # Test with different numbers of labels
         for num_labels in [2, 3, 5, 10]:
             create_hf_model("bert-base-uncased", num_labels)
-            mock_from_pretrained.assert_called_with(
-                "bert-base-uncased",
-                num_labels=num_labels
-            )
+            mock_from_pretrained.assert_called_with("bert-base-uncased", num_labels=num_labels)
 
-    @patch('src.model.AutoModelForSequenceClassification.from_pretrained')
+    @patch("src.model.AutoModelForSequenceClassification.from_pretrained")
     def test_create_hf_model_error_handling(self, mock_from_pretrained):
         """Test HF model creation error handling."""
         # Test with invalid model name
@@ -245,14 +231,14 @@ class TestModelIntegration:
     def sample_data(self):
         """Create sample data for integration tests."""
         return {
-            'text': [
-                'This is a positive review.',
-                'This is a negative review.',
-                'This is a neutral review.',
-                'Another positive example.',
-                'Another negative example.'
+            "text": [
+                "This is a positive review.",
+                "This is a negative review.",
+                "This is a neutral review.",
+                "Another positive example.",
+                "Another negative example.",
             ],
-            'labels': [1, 0, 2, 1, 0]
+            "labels": [1, 0, 2, 1, 0],
         }
 
     def test_pytorch_model_training_step(self, sample_data):
@@ -264,8 +250,8 @@ class TestModelIntegration:
         optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5)
 
         # Forward pass
-        outputs = model(sample_data['text'])
-        labels = torch.tensor(sample_data['labels'])
+        outputs = model(sample_data["text"])
+        labels = torch.tensor(sample_data["labels"])
         loss = torch.nn.functional.cross_entropy(outputs, labels)
 
         # Backward pass
@@ -288,9 +274,9 @@ class TestModelIntegration:
         model.eval()
 
         with torch.no_grad():
-            outputs = model(sample_data['text'])
+            outputs = model(sample_data["text"])
             predictions = torch.argmax(outputs, dim=1)
-            labels = torch.tensor(sample_data['labels'])
+            labels = torch.tensor(sample_data["labels"])
 
             # Calculate accuracy
             accuracy = (predictions == labels).float().mean()
@@ -298,7 +284,7 @@ class TestModelIntegration:
             # Check that accuracy is reasonable
             assert 0 <= accuracy <= 1
 
-    @patch('src.model.AutoModelForSequenceClassification.from_pretrained')
+    @patch("src.model.AutoModelForSequenceClassification.from_pretrained")
     def test_hf_model_creation_integration(self, mock_from_pretrained):
         """Test HF model creation integration."""
         # Mock model with realistic structure
@@ -309,7 +295,7 @@ class TestModelIntegration:
         model = create_hf_model("bert-base-uncased", 3)
 
         # Check that model has expected attributes
-        assert hasattr(model, 'config')
+        assert hasattr(model, "config")
         assert model.config.num_labels == 3
 
 
@@ -330,7 +316,7 @@ class TestModelEdgeCases:
         model.eval()
 
         # Create very long text
-        long_text = ['This is a very long text. ' * 1000]
+        long_text = ["This is a very long text. " * 1000]
 
         with torch.no_grad():
             outputs = model(long_text)
@@ -345,10 +331,10 @@ class TestModelEdgeCases:
         model.eval()
 
         special_texts = [
-            'Text with @#$%^&*() symbols!',
-            'Text with emojis 😀😍🎉',
-            'Text with unicode: café, naïve, résumé',
-            'Text with numbers: 12345 and symbols: !@#$%'
+            "Text with @#$%^&*() symbols!",
+            "Text with emojis 😀😍🎉",
+            "Text with unicode: café, naïve, résumé",
+            "Text with numbers: 12345 and symbols: !@#$%",
         ]
 
         with torch.no_grad():
@@ -363,12 +349,7 @@ class TestModelEdgeCases:
         model = Classifier()
         model.eval()
 
-        mixed_case_texts = [
-            'UPPERCASE TEXT',
-            'lowercase text',
-            'Mixed Case Text',
-            'RaNdOm CaSe TeXt'
-        ]
+        mixed_case_texts = ["UPPERCASE TEXT", "lowercase text", "Mixed Case Text", "RaNdOm CaSe TeXt"]
 
         with torch.no_grad():
             outputs = model(mixed_case_texts)

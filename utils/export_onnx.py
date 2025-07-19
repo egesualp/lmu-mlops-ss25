@@ -11,11 +11,7 @@ ONNX_ARTIFACT_NAME = "financial-bert-onnx"
 ONNX_DIR = "models/onnx"
 ONNX_PATH = os.path.join(ONNX_DIR, "model.onnx")
 
-run = wandb.init(
-    project=PROJECT_NAME,
-    entity=ENTITY,
-    job_type="download"
-)
+run = wandb.init(project=PROJECT_NAME, entity=ENTITY, job_type="download")
 
 artifact = run.use_artifact(MODEL_ARTIFACT, type="model")
 artifact_dir = artifact.download()
@@ -37,9 +33,9 @@ torch.onnx.export(
     dynamic_axes={
         "input_ids": {0: "batch_size", 1: "sequence_length"},
         "attention_mask": {0: "batch_size", 1: "sequence_length"},
-        "logits": {0: "batch_size"}
+        "logits": {0: "batch_size"},
     },
-    opset_version=17
+    opset_version=17,
 )
 
 # Save tokenizer along with ONNX model
@@ -47,11 +43,7 @@ tokenizer.save_pretrained(ONNX_DIR)
 
 print(f"Model exported to: {ONNX_PATH}")
 
-run = wandb.init(
-    project=PROJECT_NAME,
-    entity=ENTITY,
-    job_type="export-onnx"
-)
+run = wandb.init(project=PROJECT_NAME, entity=ENTITY, job_type="export-onnx")
 
 onnx_artifact = wandb.Artifact(ONNX_ARTIFACT_NAME, type="model")
 onnx_artifact.add_dir(ONNX_DIR)

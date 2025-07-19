@@ -11,7 +11,6 @@ class Classifier(nn.Module):
     """
 
     def __init__(self, pretrained_model_name="bert-base-uncased", num_labels=3, dropout=0.3):
-
         super().__init__()
         self.tokenizer = BertTokenizer.from_pretrained(pretrained_model_name)  # <--- add this
         self.bert = BertModel.from_pretrained(pretrained_model_name)
@@ -36,10 +35,7 @@ class Classifier(nn.Module):
 
 def create_hf_model(pretrained_model_name: str, num_labels: int):
     """Create a HuggingFace model for sequence classification."""
-    return AutoModelForSequenceClassification.from_pretrained(
-        pretrained_model_name,
-        num_labels=num_labels
-    )
+    return AutoModelForSequenceClassification.from_pretrained(pretrained_model_name, num_labels=num_labels)
 
 
 if __name__ == "__main__":

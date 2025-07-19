@@ -19,6 +19,7 @@ request_counter = Counter("prediction_requests_total", "Number of prediction req
 request_latency = Histogram("prediction_latency_seconds", "Prediction latency in seconds", registry=MY_REGISTRY)
 review_summary = Summary("review_length_summary", "Length of input reviews", registry=MY_REGISTRY)
 
+
 class PredictRequest(BaseModel):
     text: str
 
@@ -33,12 +34,12 @@ async def lifespan(app: FastAPI):
     run = wandb.init(
         project="financial-sentiment-bert",
         entity="cbrkcan90-ludwig-maximilianuniversity-of-munich",
-        job_type="inference"
+        job_type="inference",
     )
 
     artifact = run.use_artifact(
         "cbrkcan90-ludwig-maximilianuniversity-of-munich/financial-sentiment-bert/financial-bert-onnx:latest",
-        type="model"
+        type="model",
     )
     artifact_dir = artifact.download()
     print(f"ONNX model downloaded to: {artifact_dir}")
@@ -65,11 +66,12 @@ app = FastAPI(
     title="Financial Sentiment Analysis API",
     description="API for predicting sentiment of financial text",
     version="2.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Mount Prometheus metrics endpoint
 app.mount("/metrics", make_asgi_app(registry=MY_REGISTRY))
+
 
 def save_prediction_gcloud(text: str, label: str, score: float, timestamp: str = None):
     """
@@ -77,7 +79,7 @@ def save_prediction_gcloud(text: str, label: str, score: float, timestamp: str =
     """
     try:
         # Get bucket name use default
-        bucket_name = 'sentiment-prediction-data'
+        bucket_name = "sentiment-prediction-data"
 
         # Initialize Google Cloud Storage client
         storage_client = storage.Client()
@@ -93,7 +95,7 @@ def save_prediction_gcloud(text: str, label: str, score: float, timestamp: str =
             "predicted_label": label,
             "confidence_score": score,
             "timestamp": timestamp,
-            "model_version": "financial-bert-onnx:latest"
+            "model_version": "financial-bert-onnx:latest",
         }
 
         # Create filename with timestamp
@@ -101,16 +103,12 @@ def save_prediction_gcloud(text: str, label: str, score: float, timestamp: str =
 
         # Create blob and upload data
         blob = bucket.blob(filename)
-        blob.upload_from_string(
-            json.dumps(prediction_data, indent=2),
-            content_type='application/json'
-        )
+        blob.upload_from_string(json.dumps(prediction_data, indent=2), content_type="application/json")
 
         print(f"Prediction saved to gs://{bucket_name}/{filename}")
 
     except Exception as e:
         print(f"Error saving prediction to Google Cloud Storage: {e}")
-
 
 
 @app.get("/")
@@ -138,9 +136,7 @@ async def predict(request: PredictRequest, background_tasks: BackgroundTasks):
 
         inputs = tokenizer(request.text, return_tensors="np", truncation=True, padding=True)
 
-        ort_inputs = {
-            name: inputs[name].astype(np.int64) for name in input_names
-        }
+        ort_inputs = {name: inputs[name].astype(np.int64) for name in input_names}
 
         outputs = session.run([output_name], ort_inputs)
         logits = outputs[0][0]

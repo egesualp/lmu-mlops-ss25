@@ -19,11 +19,9 @@ class MyUser(HttpUser):
             "Stock prices fell sharply after the announcement.",
             "The market outlook is positive.",
             "Investors are worried about inflation.",
-            "Revenue growth exceeded expectations."
+            "Revenue growth exceeded expectations.",
         ]
 
-        data = {
-            "text": random.choice(sample_texts)
-        }
+        data = {"text": random.choice(sample_texts)}
 
         self.client.post("/predict", json=data)

@@ -26,6 +26,7 @@ precision_metric = evaluate.load("precision")
 recall_metric = evaluate.load("recall")
 f1_metric = evaluate.load("f1")
 
+
 def setup_logging(logging_choice: str):
     """Setup logging based on choice."""
     if logging_choice in ["loguru", "both"]:
@@ -33,12 +34,7 @@ def setup_logging(logging_choice: str):
         log.remove()
 
         # Add console handler
-        log.add(
-            sys.stdout,
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
-            level="INFO",
-            colorize=True
-        )
+        log.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO", colorize=True)
 
         log.info("Loguru logging configured")
 
@@ -48,9 +44,10 @@ def setup_logging(logging_choice: str):
             entity=None,
             tags=["bert", "sentiment", "financial", "evaluation"],
             notes="BERT evaluation for financial sentiment analysis",
-            resume="allow"
+            resume="allow",
         )
         log.info("Wandb logging configured")
+
 
 def evaluate_hf_model(
     model_path: str,
@@ -58,7 +55,7 @@ def evaluate_hf_model(
     pretrained_model: Optional[str] = None,
     max_rows: Optional[int] = None,
     batch_size: int = 16,
-    logging_choice: str = "loguru"
+    logging_choice: str = "loguru",
 ):
     """Evaluate Hugging Face model."""
     log.info("Loading Hugging Face model from: {}", model_path)
@@ -68,11 +65,11 @@ def evaluate_hf_model(
 
     # If pretrained_model not provided, try to get it from model config
     if pretrained_model is None:
-        if hasattr(model.config, 'architectures') and model.config.architectures:
+        if hasattr(model.config, "architectures") and model.config.architectures:
             # Try to infer from model architecture
-            if 'BertForSequenceClassification' in model.config.architectures:
+            if "BertForSequenceClassification" in model.config.architectures:
                 pretrained_model = "bert-base-uncased"
-            elif 'DistilBertForSequenceClassification' in model.config.architectures:
+            elif "DistilBertForSequenceClassification" in model.config.architectures:
                 pretrained_model = "distilbert-base-uncased"
             else:
                 # Default fallback
@@ -88,9 +85,7 @@ def evaluate_hf_model(
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
 
     # Create datasets
-    train_ds, eval_ds, _, num_labels = create_hf_datasets(
-        data_dir, pretrained_model, max_rows
-    )
+    train_ds, eval_ds, _, num_labels = create_hf_datasets(data_dir, pretrained_model, max_rows)
 
     # Setup evaluation arguments
     eval_args = TrainingArguments(
@@ -98,7 +93,7 @@ def evaluate_hf_model(
         per_device_eval_batch_size=batch_size,
         dataloader_num_workers=0,
         remove_unused_columns=True,
-        report_to=[]  # No wandb for evaluation
+        report_to=[],  # No wandb for evaluation
     )
 
     # Data collator
@@ -106,11 +101,7 @@ def evaluate_hf_model(
 
     # Create trainer
     trainer = Trainer(
-        model=model,
-        args=eval_args,
-        eval_dataset=eval_ds,
-        data_collator=data_collator,
-        compute_metrics=compute_metrics
+        model=model, args=eval_args, eval_dataset=eval_ds, data_collator=data_collator, compute_metrics=compute_metrics
     )
 
     # Evaluate
@@ -127,28 +118,25 @@ def evaluate_hf_model(
 
     # Log results
     log.info("Evaluation Results:")
-    log.info("Accuracy: {:.4f}", results['eval_accuracy'])
-    log.info("Loss: {:.4f}", results['eval_loss'])
+    log.info("Accuracy: {:.4f}", results["eval_accuracy"])
+    log.info("Loss: {:.4f}", results["eval_loss"])
 
     for metric, value in detailed_metrics.items():
         log.info("{}: {:.4f}", metric, value)
 
     # Log to wandb if enabled
     if logging_choice in ["wandb", "both"]:
-        wandb.log({
-            "eval_accuracy": results['eval_accuracy'],
-            "eval_loss": results['eval_loss'],
-            **detailed_metrics
-        })
+        wandb.log({"eval_accuracy": results["eval_accuracy"], "eval_loss": results["eval_loss"], **detailed_metrics})
 
     return results, detailed_metrics, true_labels, pred_labels
+
 
 def evaluate_pytorch_model(
     model_path: str,
     data_dir: Path,
     max_rows: Optional[int] = None,
     batch_size: int = 16,
-    logging_choice: str = "loguru"
+    logging_choice: str = "loguru",
 ):
     """Evaluate PyTorch model."""
     log.info("Loading PyTorch model from: {}", model_path)
@@ -190,12 +178,10 @@ def evaluate_pytorch_model(
 
     # Log to wandb if enabled
     if logging_choice in ["wandb", "both"]:
-        wandb.log({
-            "eval_accuracy": accuracy,
-            **detailed_metrics
-        })
+        wandb.log({"eval_accuracy": accuracy, **detailed_metrics})
 
     return {"accuracy": accuracy}, detailed_metrics, all_labels, all_preds
+
 
 def compute_metrics(eval_pred):
     """Compute metrics for Hugging Face evaluation."""
@@ -204,20 +190,20 @@ def compute_metrics(eval_pred):
 
     return {
         "accuracy": accuracy_metric.compute(predictions=predictions, references=labels)["accuracy"],
-        "precision": precision_metric.compute(predictions=predictions, references=labels, average="weighted")["precision"],
+        "precision": precision_metric.compute(predictions=predictions, references=labels, average="weighted")[
+            "precision"
+        ],
         "recall": recall_metric.compute(predictions=predictions, references=labels, average="weighted")["recall"],
-        "f1": f1_metric.compute(predictions=predictions, references=labels, average="weighted")["f1"]
+        "f1": f1_metric.compute(predictions=predictions, references=labels, average="weighted")["f1"],
     }
+
 
 def calculate_detailed_metrics(y_true, y_pred):
     """Calculate detailed classification metrics."""
-    precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average='weighted')
+    precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average="weighted")
 
-    return {
-        "precision": precision,
-        "recall": recall,
-        "f1_score": f1
-    }
+    return {"precision": precision, "recall": recall, "f1_score": f1}
+
 
 def print_classification_report(y_true, y_pred, labels=None):
     """Print detailed classification report."""
@@ -230,20 +216,22 @@ def print_classification_report(y_true, y_pred, labels=None):
     log.info("Confusion Matrix:")
     print(cm)
 
+
 def save_confusion_matrix(y_true, y_pred, save_path: str = "confusion_matrix.png"):
     """Save confusion matrix as a plot."""
     cm = confusion_matrix(y_true, y_pred)
 
     plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.title('Confusion Matrix')
-    plt.ylabel('True Label')
-    plt.xlabel('Predicted Label')
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+    plt.title("Confusion Matrix")
+    plt.ylabel("True Label")
+    plt.xlabel("Predicted Label")
     plt.tight_layout()
     plt.savefig(save_path)
     plt.close()
 
     log.info("Confusion matrix saved to: {}", save_path)
+
 
 def evaluate_model(
     model_path: str = typer.Option("models/final", help="Path to the trained model"),
@@ -253,7 +241,9 @@ def evaluate_model(
     max_rows: Optional[int] = typer.Option(None, help="Maximum number of rows to load"),
     logging: str = typer.Option("loguru", help="Logging choice: loguru, wandb, both, none"),
     save_plots: bool = typer.Option(True, help="Save confusion matrix plot"),
-    pretrained_model: Optional[str] = typer.Option(None, help="Pretrained model name for HF models (auto-detected if not provided)"),
+    pretrained_model: Optional[str] = typer.Option(
+        None, help="Pretrained model name for HF models (auto-detected if not provided)"
+    ),
 ):
     """
     Evaluate the trained model on the test set and print comprehensive metrics.
@@ -288,7 +278,7 @@ def evaluate_model(
                 pretrained_model=pretrained_model,
                 max_rows=max_rows,
                 batch_size=batch_size,
-                logging_choice=logging
+                logging_choice=logging,
             )
         else:
             # Evaluate PyTorch model
@@ -297,7 +287,7 @@ def evaluate_model(
                 data_dir=data_path,
                 max_rows=max_rows,
                 batch_size=batch_size,
-                logging_choice=logging
+                logging_choice=logging,
             )
 
         # Print detailed classification report
@@ -318,6 +308,7 @@ def evaluate_model(
     finally:
         if logging in ["wandb", "both"]:
             wandb.finish()
+
 
 if __name__ == "__main__":
     typer.run(evaluate_model)

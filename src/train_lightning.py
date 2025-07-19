@@ -15,6 +15,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from loguru import logger as log
 import os
 
+
 class SentimentModule(pl.LightningModule):
     def __init__(self, pretrained_model_name: str, lr: float, dropout: float):
         super().__init__()
@@ -44,6 +45,7 @@ class SentimentModule(pl.LightningModule):
 
     def configure_optimizers(self):
         return optim.Adam(self.parameters(), lr=self.hparams.lr)
+
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config_pytorch")
 def train(cfg: DictConfig):
@@ -108,7 +110,7 @@ def train(cfg: DictConfig):
         "logger": wandb_logger if logging_choice == "wandb" else False,
         "default_root_dir": "models" if save_strategy != "none" else None,
         "callbacks": callbacks,
-        "enable_checkpointing": save_strategy == "checkpoint"
+        "enable_checkpointing": save_strategy == "checkpoint",
     }
     if eval_strategy == "steps":
         trainer_kwargs["val_check_interval"] = eval_steps
@@ -137,6 +139,7 @@ def train(cfg: DictConfig):
 
     if logging_choice == "wandb":
         wandb.finish()
+
 
 if __name__ == "__main__":
     train()

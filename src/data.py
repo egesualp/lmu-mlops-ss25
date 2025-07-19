@@ -49,6 +49,7 @@ class MyDataset(Dataset):
         label_tensor = torch.tensor(label_id, dtype=torch.long)
         return {"text": row["text"], "label": label_tensor}
 
+
 class HFDataset(Dataset):
     """A Dataset that tokenizes on-the-fly using a HuggingFace tokenizer."""
 
@@ -65,6 +66,7 @@ class HFDataset(Dataset):
         encoding["labels"] = item["label"]
         return encoding
 
+
 def preprocess_data(
     input_path: Path,
     output_folder: Path = Path("data/processed"),
@@ -74,7 +76,13 @@ def preprocess_data(
     random_state: int = 42,
 ) -> None:
     """Preprocess raw CSV and save train, test, eval splits in output_folder/"""
-    logger.info("Starting preprocessing with train_ratio={}, test_ratio={}, eval_ratio={}, random_state={}", train_ratio, test_ratio, eval_ratio, random_state)
+    logger.info(
+        "Starting preprocessing with train_ratio={}, test_ratio={}, eval_ratio={}, random_state={}",
+        train_ratio,
+        test_ratio,
+        eval_ratio,
+        random_state,
+    )
     # Validate ratios
     total = train_ratio + test_ratio + eval_ratio
     if not abs(total - 1.0) < 1e-6:
@@ -158,6 +166,7 @@ def load(
     typer.echo(f"Loaded {split} dataset with {len(dataset)} samples")
     typer.echo(f"Labels mapping: {dataset.label2id}")
 
+
 @app.command()
 def download() -> None:
     """
@@ -165,11 +174,7 @@ def download() -> None:
     """
     try:
         typer.echo("Downloading dataset from KaggleHub...")
-        df = dataset_load(
-            KaggleDatasetAdapter.PANDAS,
-            "sbhatti/financial-sentiment-analysis",
-            "data.csv"
-        )
+        df = dataset_load(KaggleDatasetAdapter.PANDAS, "sbhatti/financial-sentiment-analysis", "data.csv")
 
     except Exception as e:
         typer.echo(f"Failed to download dataset: {e}", err=True)
@@ -181,7 +186,6 @@ def download() -> None:
     target = dest / "data.csv"
     df.to_csv(target, index=False)
     typer.echo(f"Saved DataFrame to {target}")
-
 
     """try:
         typer.echo("Downloading dataset from KaggleHub...")

@@ -6,8 +6,8 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # === CONFIG ===
 TEXT = "The market outlook is stable and promising."
-HF_MODEL_PATH = "artifacts/model-run_financial_bert:v0"      # Local path or W&B-downloaded dir
-ONNX_MODEL_PATH = "models/onnx/model.onnx"                  # Path to exported ONNX model
+HF_MODEL_PATH = "artifacts/model-run_financial_bert:v0"  # Local path or W&B-downloaded dir
+ONNX_MODEL_PATH = "models/onnx/model.onnx"  # Path to exported ONNX model
 LABEL_MAP = {0: "negative", 1: "neutral", 2: "positive"}  # Adjust based on training
 
 # === Load Tokenizer ===
@@ -35,10 +35,12 @@ start = time.time()
 logits_onnx = session.run(["logits"], onnx_inputs)[0]
 onnx_time = time.time() - start
 
+
 # === Compare Predictions ===
 def softmax(x):
     exp_x = np.exp(x - np.max(x))
     return exp_x / exp_x.sum()
+
 
 probs_hf = softmax(logits_hf[0])
 probs_onnx = softmax(logits_onnx[0])
@@ -52,8 +54,8 @@ print(f"HuggingFace: {LABEL_MAP[label_id_hf]} ({probs_hf[label_id_hf]:.4f})")
 print(f"ONNX:        {LABEL_MAP[label_id_onnx]} ({probs_onnx[label_id_onnx]:.4f})")
 
 print("\n=== TIMING ===")
-print(f"HuggingFace inference time: {hf_time*1000:.2f} ms")
-print(f"ONNX Runtime inference time: {onnx_time*1000:.2f} ms")
+print(f"HuggingFace inference time: {hf_time * 1000:.2f} ms")
+print(f"ONNX Runtime inference time: {onnx_time * 1000:.2f} ms")
 
 print("\n=== LOGIT DIFFERENCE ===")
 print("L2 norm of logits diff:", np.linalg.norm(logits_hf - logits_onnx))

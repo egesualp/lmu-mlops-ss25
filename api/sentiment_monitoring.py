@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize Google Cloud Storage client
     storage_client = storage.Client()
-    bucket_name = os.getenv('GCS_BUCKET_NAME', 'sentiment-prediction-data')
+    bucket_name = os.getenv("GCS_BUCKET_NAME", "sentiment-prediction-data")
 
     # Load training data
     try:
@@ -58,22 +58,23 @@ async def lifespan(app: FastAPI):
 
             # Create DataFrame from CSV content
             from io import StringIO
+
             training_data = pd.read_csv(StringIO(csv_content))
             print(f"Successfully loaded training data from GCS: {len(training_data)} samples")
 
         else:
             print(f"Warning: Training data blob does not exist: {training_blob_path}")
-            training_data = pd.DataFrame(columns=['text', 'label'])
+            training_data = pd.DataFrame(columns=["text", "label"])
 
     except Exception as e:
         print(f"Error loading training data: {e}")
-        training_data = pd.DataFrame(columns=['text', 'label'])
+        training_data = pd.DataFrame(columns=["text", "label"])
 
     # Set class names based on training data
     if not training_data.empty:
-        class_names = sorted(training_data['label'].unique().tolist())
+        class_names = sorted(training_data["label"].unique().tolist())
     else:
-        class_names = ['negative', 'neutral', 'positive']  # Default sentiment classes
+        class_names = ["negative", "neutral", "positive"]  # Default sentiment classes
 
     print(f"Class names: {class_names}")
 
@@ -86,7 +87,7 @@ app = FastAPI(
     title="Sentiment Analysis Monitoring API",
     description="API for monitoring data drift in sentiment predictions using Evidently",
     version="1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 
@@ -172,7 +173,7 @@ def load_latest_files(predictions_path: Path, n: int) -> List[Dict[str, Any]]:
         predictions = []
         for file_path in latest_files:
             try:
-                with open(file_path, 'r') as f:
+                with open(file_path, "r") as f:
                     prediction_data = json.load(f)
                     predictions.append(prediction_data)
             except Exception as e:
@@ -205,60 +206,53 @@ async def run_analysis(n_predictions: int = 100) -> Report:
     if not predictions:
         print("No predictions found, cannot run analysis")
         # Create empty dataframe for analysis
-        prediction_df = pd.DataFrame(columns=['text', 'predicted_label', 'confidence_score'])
+        prediction_df = pd.DataFrame(columns=["text", "predicted_label", "confidence_score"])
     else:
         # Convert predictions to DataFrame
-        prediction_df = pd.DataFrame([
-            {
-                'text': pred.get('text', ''),
-                'predicted_label': pred.get('predicted_label', ''),
-                'confidence_score': pred.get('confidence_score', 0.0),
-                'timestamp': pred.get('timestamp', '')
-            }
-            for pred in predictions
-        ])
+        prediction_df = pd.DataFrame(
+            [
+                {
+                    "text": pred.get("text", ""),
+                    "predicted_label": pred.get("predicted_label", ""),
+                    "confidence_score": pred.get("confidence_score", 0.0),
+                    "timestamp": pred.get("timestamp", ""),
+                }
+                for pred in predictions
+            ]
+        )
 
     # Prepare reference data (training data)
     reference_df = training_data.copy()
-    if 'predicted_label' not in reference_df.columns:
-        reference_df['predicted_label'] = reference_df['label']  # Use true labels as reference
-    if 'confidence_score' not in reference_df.columns:
-        reference_df['confidence_score'] = 1.0  # Assume perfect confidence for training data
+    if "predicted_label" not in reference_df.columns:
+        reference_df["predicted_label"] = reference_df["label"]  # Use true labels as reference
+    if "confidence_score" not in reference_df.columns:
+        reference_df["confidence_score"] = 1.0  # Assume perfect confidence for training data
 
     # Ensure we have some data for analysis
     if reference_df.empty:
         print("Warning: No reference data available for analysis")
-        reference_df = pd.DataFrame({
-            'text': ['Sample text'],
-            'predicted_label': ['neutral'],
-            'confidence_score': [1.0]
-        })
+        reference_df = pd.DataFrame(
+            {"text": ["Sample text"], "predicted_label": ["neutral"], "confidence_score": [1.0]}
+        )
 
     if prediction_df.empty:
         print("Warning: No prediction data available for analysis")
-        prediction_df = pd.DataFrame({
-            'text': ['Sample prediction text'],
-            'predicted_label': ['neutral'],
-            'confidence_score': [0.5]
-        })
+        prediction_df = pd.DataFrame(
+            {"text": ["Sample prediction text"], "predicted_label": ["neutral"], "confidence_score": [0.5]}
+        )
 
     # Create Evidently report
-    report = Report(metrics=[
-        TargetDriftPreset(columns=["predicted_label"]),
-        TextEvals(column_name="text")
-    ])
+    report = Report(metrics=[TargetDriftPreset(columns=["predicted_label"]), TextEvals(column_name="text")])
 
     try:
         # Run the report
-        report.run(
-            reference_data=reference_df,
-            current_data=prediction_df
-        )
+        report.run(reference_data=reference_df, current_data=prediction_df)
         print("Data drift analysis completed successfully")
     except Exception as e:
         print(f"Error running analysis: {e}")
         # Create a minimal report if analysis fails
         from evidently.metrics import DataDriftTable
+
         report = Report(metrics=[DataDriftTable()])
         report.run(reference_data=reference_df.head(1), current_data=prediction_df.head(1))
 
@@ -276,7 +270,7 @@ async def health_check():
         "training_samples": len(training_data) if training_data is not None else 0,
         "class_names": class_names,
         "gcs_client_ready": storage_client is not None,
-        "bucket_name": bucket_name
+        "bucket_name": bucket_name,
     }
 
 
@@ -288,11 +282,11 @@ async def get_stats():
     stats = {
         "training_data_size": len(training_data) if training_data is not None else 0,
         "class_names": class_names,
-        "bucket_name": bucket_name
+        "bucket_name": bucket_name,
     }
 
     if training_data is not None and not training_data.empty:
-        stats["label_distribution"] = training_data['label'].value_counts().to_dict()
+        stats["label_distribution"] = training_data["label"].value_counts().to_dict()
 
     return stats
 
@@ -346,8 +340,4 @@ async def get_report_json(n_predictions: int = 100):
         return {"report": json_report, "status": "success"}
 
     except Exception as e:
-        return {
-            "error": str(e),
-            "status": "error",
-            "message": "Failed to generate drift analysis report"
-        }
+        return {"error": str(e), "status": "error", "message": "Failed to generate drift analysis report"}

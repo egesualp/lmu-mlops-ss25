@@ -8,9 +8,7 @@ print("DEBUG sys.executable =", __import__("sys").executable)
 
 # Init under the team where the run/project lives (as shown in your logs)
 run = wandb.init(
-    project="financial-sentiment-bert",
-    entity="cbrkcan90-ludwig-maximilianuniversity-of-munich",
-    job_type="download"
+    project="financial-sentiment-bert", entity="cbrkcan90-ludwig-maximilianuniversity-of-munich", job_type="download"
 )
 
 # Pull the artifact (adjust if needed; see Step 4 below)
