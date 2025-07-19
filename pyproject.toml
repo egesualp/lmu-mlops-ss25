@@ -33,7 +33,11 @@ line-length = 120
 select = ["I", "N", "E", "W", ]
 
 [tool.coverage.run]
-omit = ["tests/*"]
+omit = [
+    # omit pytorch-generated files in /tmp
+    "/tmp/*",
+    "tests/*"
+]
 
 [project.scripts]
 process-data = "data:app"
