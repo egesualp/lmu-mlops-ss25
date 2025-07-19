@@ -26,7 +26,7 @@ The dataset structure includes two primary columns: `Sentence` (containing finan
 During preprocessing, these columns are renamed to `text` and `label` respectively. 
 The dataset is automatically split into training (80%), validation (10%), and test (10%) sets to ensure proper model evaluation. 
 
-## MODEL
+## Model
 
 We selected **BERT (Bidirectional Encoder Representations from Transformers)** as our base model for this financial sentiment classification task due to several key advantages. 
 
@@ -245,7 +245,6 @@ PROJECT_NAME = "financial-sentiment-bert"
 ENTITY = "your-wandb-entity"
 MODEL_ARTIFACT = "entity/project/model-artifact:version"
 ONNX_ARTIFACT_NAME = "your-onnx-artifact-name"
-```
 ```
 
 ## Running with Docker
