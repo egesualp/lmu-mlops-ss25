@@ -62,10 +62,10 @@ will check the repositories and the code to verify your answers.
 * [x] Build the docker files locally and make sure they work as intended (M10)
 * [x] Write one or multiple configurations files for your experiments (M11)
 * [x] Used Hydra to load the configurations and manage your hyperparameters (M11)
-* [ ] Use profiling to optimize your code (M12)
+* [x] Use profiling to optimize your code (M12)
 * [x] Use logging to log important events in your code (M14)
 * [x] Use Weights & Biases to log training progress and other important metrics/artifacts in your code (M14)
-* [ ] Consider running a hyperparameter optimization sweep (M14)
+* [x] Consider running a hyperparameter optimization sweep (M14)
 * [x] Use PyTorch-lightning (if applicable) to reduce the amount of boilerplate in your code (M15)
 
 ### Week 2
@@ -95,7 +95,7 @@ will check the repositories and the code to verify your answers.
 * [x] Deploy to the cloud a drift detection API (M27)
 * [x] Instrument your API with a couple of system metrics (M28)
 * [x] Setup cloud monitoring of your instrumented application (M28)
-* [ ] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
+* [x] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
 * [ ] If applicable, optimize the performance of your data loading using distributed data loading (M29)
 * [ ] If applicable, optimize the performance of your training pipeline by using distributed training (M30)
 * [ ] Play around with quantization, compilation and pruning for you trained models to increase inference speed (M31)
@@ -224,8 +224,8 @@ Added:
 >
 > Answer:
 
-In total we have implemented 36 tests. Primarily we are testing data and model as these the most critical parts of our
-application but also api. We aimed to keep our data processing and model parts as stable as possible during development.
+In total we have implemented 36 tests. Primarily we are testing data and model as these are the most critical parts of our
+application. We aimed to keep our data processing and model parts as stable as possible during development. We run test on api script as well.
 
 ### Question 8
 
@@ -383,7 +383,7 @@ In our project, Docker is used to create containerized applications for consiste
 >
 > Answer:
 
---- question 16 fill here ---
+We primarily used the VSCode Debugger for step-by-step debugging, along with loguru logging and occasional try–raise blocks to quickly isolate bugs. For profiling, we experimented with both cProfile (visualized via SnakeViz) and torch.profiler integrated with TensorBoard. This gave us useful insights into runtime behavior. However, since much of our pipeline is built on HuggingFace’s transformers library — which is already well-optimized — we did not pursue aggressive performance tuning beyond basic profiling.
 
 ## Working in the cloud
 
