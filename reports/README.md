@@ -127,7 +127,8 @@ NaN
 >
 > Answer:
 
-* Ege Süalp (12806046), Celal Berke Can (13030133)*
+* Ege Süalp (12806046) 
+* Celal Berke Can (13030133)
 
 ### Question 3
 > **A requirement to the project is that you include a third-party package not covered in the course. What framework**
@@ -140,10 +141,6 @@ NaN
 > *package to do ... and ... in our project*.
 >
 > Answer:
-
-* Of course! Here is the answer, ready for you to copy and paste:
-
----
 
 * We used the Hugging Face `transformers` framework in our project, which provided us with state-of-the-art pre-trained models and utilities for natural language processing tasks. The transformers library made it straightforward to fine-tune models such as BERT and DistilBERT for sentiment analysis, allowing us to leverage powerful architectures with minimal effort. Additionally, we utilized the `evaluate` library from Hugging Face to systematically assess our model’s performance using standard metrics like accuracy and F1-score. For data management, we used the `kaggle` and `kagglehub` frameworks to programmatically download datasets from Kaggle within our codebase, rather than downloading them manually. We implemented a dedicated download function to automate this process, ensuring reproducibility and ease of setup for new team members. These frameworks and resources significantly accelerated our development process, improved reproducibility, and enabled us to focus on experimentation and deployment rather than low-level implementation details. Overall, they were essential in helping us complete the project efficiently and with high-quality results. *
 
@@ -227,7 +224,8 @@ Added:
 >
 > Answer:
 
---- question 7 fill here ---
+In total we have implemented 36 tests. Primarily we are testing data and model as these the most critical parts of our
+application but also api. We aimed to keep our data processing and model parts as stable as possible during development.
 
 ### Question 8
 
@@ -242,7 +240,9 @@ Added:
 >
 > Answer:
 
---- question 8 fill here ---
+The average code coverage is 82%, which includes all our source code. We have relatively higher coverage in our api script (95%). In model.py and data.py the coverage is about ~74-78%. We didn't run test for util scripts and frontend since they do not constitute the main bones of the project.
+
+Even with 100% code coverage, the code might not be error-free because coverage only indicates that the code was executed during tests, not that it was tested correctly. Tests might miss logical errors, fail to cover edge cases, or lack assertions for expected outcomes. Additionally, real-world scenarios can introduce unexpected interactions that tests didn't anticipate, making 100% coverage an incomplete measure of code reliability.
 
 ### Question 9
 
@@ -257,7 +257,7 @@ Added:
 >
 > Answer:
 
---- question 9 fill here ---
+We have created branch for each development task (modules in the project task list) and then add CI to test whether these branches are eligible to be merged with main. We solely used PRs in our project to keep our code clean. With GCS integration, we ensure that the recent build is taken in the cloud based on the updated main branch.
 
 ### Question 10
 
@@ -289,7 +289,20 @@ Added:
 >
 > Answer:
 
---- question 11 fill here ---
+We have structured our continuous integration (CI) setup into multiple workflows under .github/workflows/, each targeting specific stages of our MLOps pipeline. The key workflows include:
+
+    * Run tests: This workflow is responsible for executing our unit and integration tests. It ensures that core components of the system function correctly across development stages. We use pytest and include coverage reporting in local runs to monitor test completeness.
+
+    * Pre-commit CI & auto-update: These workflows ensure code quality and consistency. They run linting checks (e.g., black, flake8, or ruff), verify that pre-commit hooks pass, and automatically update pre-commit dependencies when needed.
+
+    * Evaluate on Model Registry Change: This workflow is triggered when changes are made to the model registry. It validates updated models, runs evaluation scripts, and logs performance metrics to prevent regressions.
+
+    * Dataset Statistics on Data Change: When datasets are modified, this workflow recomputes and logs dataset statistics to monitor data drift or schema changes.
+
+    * load_api_test.yaml: This YAML file contains a workflow to test our API layer, ensuring that endpoints correctly respond to requests and that the backend remains stable as changes are introduced.
+
+Currently, our CI runs on Ubuntu, Windows and MacOS using Python 3.12. We do not yet test across multiple Python versions. We used caching in [test workflows](https://github.com/egesualp/lmu-mlops-ss25/actions/workflows/tests.yaml) and also in our [monthly pre-commit hook workflows](https://github.com/egesualp/lmu-mlops-ss25/actions/workflows/update_pre_commit.yaml).
+
 
 ## Running code and tracking experiments
 
@@ -308,7 +321,7 @@ Added:
 >
 > Answer:
 
---- question 12 fill here ---
+Experiments are configured using Hydra with YAML files located in the conf directory, such as config_hf.yaml and sweep.yaml. The train_hf.py script utilizes these configurations to manage experiment settings. To run an experiment, execute the script with Hydra, specifying the desired configuration file. For example, use python src/train_hf.py --config-name=config_hf to load config_hf.yaml. This setup allows for flexible parameter management and easy adjustments without altering the code.
 
 ### Question 13
 
@@ -323,7 +336,7 @@ Added:
 >
 > Answer:
 
---- question 13 fill here ---
+To ensure reproducibility and prevent information loss during experiments, we use Weights & Biases (wandb) and Loguru for logging. These tools capture detailed logs and metrics, allowing us to track and analyze experiments effectively. Additionally, we set random seeds for libraries like NumPy and PyTorch, ensuring consistent results across runs. This combination of logging and seeding guarantees that experiments are reproducible and all relevant data is preserved. To reproduce an experiment, one would have to run training with underlying config file.
 
 ### Question 14
 
@@ -355,7 +368,7 @@ Added:
 >
 > Answer:
 
---- question 15 fill here ---
+In our project, Docker is used to create containerized applications for consistent and isolated environments. We have Dockerfiles for different components, such as `frontend.dockerfile`, `api.dockerfile`, and `train.dockerfile`, located in the `dockerfiles` directory. To run a Docker image, you can build it using `docker build -t <image_name> -f dockerfiles/api.dockerfile .` and then run it with `docker run <image_name>`. This ensures that our applications run smoothly across different environments. You can view one of our Dockerfiles [here](dockerfiles/api.dockerfile).
 
 ### Question 16
 
