@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mlops_project"
-version = "0.0.1"
+version = "1.0.0"
 description = "A short description of the project."
 authors = [
   { name = "egesualp", email = "egesualp@gmail.com" },
-  { name = "dejvis", email = "your@email.com" }
+  { name = "celalberkecan", email = "cbrkcan90@gmail.com" }
 ]
 
 keywords = ["machine learning", "MLOps"]
@@ -37,5 +37,3 @@ omit = ["tests/*"]
 
 [project.scripts]
 process-data = "data:app"
-train = "train:app"
-train-config = "train_config:app"
