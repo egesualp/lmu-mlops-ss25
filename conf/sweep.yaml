@@ -1,0 +1,29 @@
+program: src/train_hf.py
+project: financial-sentiment-bert
+name: hf-hyperparameter-sweep
+group: lmu-mlops-ss25
+
+method: bayes
+
+metric:
+  name: eval_accuracy
+  goal: maximize
+
+command:
+  - python
+  - ${program}
+  - ${args_no_hyphens}
+
+parameters:
+  epochs:
+    values: [3, 5, 8, 10]
+
+  batch_size:
+    values: [8, 16, 32]
+
+
+early_terminate:
+  type: hyperband
+  min_iter: 3
+
+run_cap: 10
