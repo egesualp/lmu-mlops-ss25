@@ -8,4 +8,7 @@ worker_pool_specs:
       args: ["cbrkcan90-ludwig-maximilianuniversity-of-munich/financial-sentiment-bert/nbgciurs"]  # Replace with actual sweep ID
       env:
         - name: WANDB_API_KEY
-          value: d8fb8cf0074e2da88156e837aaf2a2ea6d4b1b5c
+          valueFrom:
+            secretKeyRef:
+              name: WANDB_API_KEY
+              key: latest
