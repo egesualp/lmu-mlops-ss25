@@ -11,7 +11,6 @@ ONNX_ARTIFACT_NAME = "financial-bert-onnx"
 ONNX_DIR = "models/onnx"
 ONNX_PATH = os.path.join(ONNX_DIR, "model.onnx")
 
-# === Step 1: Download model from W&B ===
 run = wandb.init(
     project=PROJECT_NAME,
     entity=ENTITY,
@@ -22,11 +21,9 @@ artifact = run.use_artifact(MODEL_ARTIFACT, type="model")
 artifact_dir = artifact.download()
 print(f"Artifact downloaded to: {artifact_dir}")
 
-# === Step 2: Load model and tokenizer ===
 model = AutoModelForSequenceClassification.from_pretrained(artifact_dir)
 tokenizer = AutoTokenizer.from_pretrained(artifact_dir)
 
-# === Step 3: Export to ONNX ===
 os.makedirs(ONNX_DIR, exist_ok=True)
 dummy_text = "This is a dummy input for ONNX export."
 inputs = tokenizer(dummy_text, return_tensors="pt")
@@ -50,7 +47,6 @@ tokenizer.save_pretrained(ONNX_DIR)
 
 print(f"Model exported to: {ONNX_PATH}")
 
-# === Step 4: Upload ONNX model to W&B ===
 run = wandb.init(
     project=PROJECT_NAME,
     entity=ENTITY,

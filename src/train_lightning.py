@@ -45,7 +45,7 @@ class SentimentModule(pl.LightningModule):
     def configure_optimizers(self):
         return optim.Adam(self.parameters(), lr=self.hparams.lr)
 
-@hydra.main(version_base=None, config_path="../conf", config_name="config")
+@hydra.main(version_base=None, config_path="../conf", config_name="config_pytorch")
 def train(cfg: DictConfig):
     # Basic config values
     experiment_name = cfg.experiment_name
