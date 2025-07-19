@@ -31,10 +31,10 @@ serving/
 
 ```bash
 # Install frontend dependencies
-pip install -r serving/requirements_frontend.txt
+pip install -r frontend/requirements_frontend.txt
 
 # Start the Streamlit frontend
-streamlit run serving/app.py
+streamlit run frontend/app.py
 ```
 
 The frontend will be available at `http://localhost:8501`
