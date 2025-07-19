@@ -41,5 +41,5 @@ model:
   full_determinism: false  # Full determinism for reproducibility
 seed: 42
 eval_strategy: epoch
-logging: wandb  # Options: loguru, wandb, both, none
-save_strategy: none  # or 'end' or 'checkpoint'
+logging: both  # Options: loguru, wandb, both, none
+save_strategy: end  # or 'end' or 'checkpoint'
