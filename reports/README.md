@@ -272,7 +272,7 @@ We have created branch for each development task (modules in the project task li
 >
 > Answer:
 
---- question 10 fill here ---
+We used DVC to manage our data, which is stored in a Google Cloud Storage (GCS) bucket. DVC allowed us to version control large datasets efficiently without storing them directly in the Git repository. This made it easy to track changes to our data, share consistent data versions across the team, and ensure reproducibility of our experiments. By connecting DVC with GCS, we could seamlessly pull the correct data version needed for any experiment or model training run, improving collaboration and making our workflow more robust.
 
 ### Question 11
 
@@ -342,7 +342,7 @@ To ensure reproducibility and prevent information loss during experiments, we us
 
 > **Upload 1 to 3 screenshots that show the experiments that you have done in W&B (or another experiment tracking**
 > **service of your choice). This may include loss graphs, logged images, hyperparameter sweeps etc. You can take**
-> **inspiration from [this figure](figures/wandb.png). Explain what metrics you are tracking and why they are**
+> **inspiration from [this figure](figures/wandb_example.png). Explain what metrics you are tracking and why they are**
 > **important.**
 >
 > Recommended answer length: 200-300 words + 1 to 3 screenshots.
@@ -353,7 +353,15 @@ To ensure reproducibility and prevent information loss during experiments, we us
 >
 > Answer:
 
---- question 14 fill here ---
+As seen in ![Figure](figures/wandb_1.png), we conducted a series of hyperparameter sweeps using Bayesian Optimization in Weights & Biases (W&B) to optimize model evaluation performance. We tracked several key metrics that reflect both model quality and computational efficiency.
+
+The top panel shows aggregated results across different sweep runs, including `final_eval.eval_loss`, `final_eval.eval_accuracy`, and `final_eval.eval_runtime`. These metrics are crucial: low evaluation loss paired with high accuracy suggests good generalization on unseen data, while runtime offers insights into the computational cost per evaluation—a vital factor when tuning batch sizes, learning rates, and training durations.
+
+In the lower panel, we monitor throughput metrics such as `eval/steps_per_second` and `eval/samples_per_second`. These reveal how efficiently each model configuration processes data. While these are useful for comparison, they are less relevant in our deployment setting since we use an ONNX-optimized model for inference.
+
+To further explore how hyperparameters affect performance, we use a parallel coordinates plot in ![Figure_sweep](figures/wandb_2.png). This visualizes the relationship between `batch_size`, `epochs`, and `final_eval.eval_accuracy`. We observe that intermediate batch sizes and higher epoch counts tend to correlate with higher accuracy.
+
+Together, these visualizations help us balance performance and efficiency, ultimately guiding us toward the best-performing sweep configurations such as `silver-sweep-7`, `confused-sweep-6`, and `youthful-sweep-9`.
 
 ### Question 15
 
@@ -410,7 +418,7 @@ We used the following six GCP services: Artifact Registry, Cloud Storage, Secret
 <br>
 **Vertex AI** handles our model training infrastructure through custom jobs defined in `vertex_config.yaml` and `vertex_sweep_config.yaml`, enabling scalable distributed training and hyperparameter optimization sweeps on Google's managed ML platform. <br>
 <br> 
-**Cloud Run** provides serverless deployment for our FastAPI-based sentiment analysis API and monitoring service, with auto-scaling capabilities and integrated Prometheus monitoring through sidecar containers as configured in `cloudrun_monitoring.yaml`. <br>
+**Cloud Run** provides serverless deployment for our FastAPI-based sentiment analysis API and monitoring service, with auto-scaling capabilities and integrated Prometheus monitoring through sidecar containers as configured in `cloudrun_monitoring.yaml`. We have also deployed our frontend using Cloud Run. <br>
 <br> 
 **Cloud Build** orchestrates our CI/CD pipeline with multiple build configurations (`build_api_docker_image.yaml`, `build_docker_images.yaml`, `build_monitoring_docker_image.yaml`) that automatically build and deploy our services when code changes are pushed to the main branch. <br>
 '
@@ -474,7 +482,7 @@ The Vertex AI service abstracts away the Compute Engine management, automaticall
 >
 > Answer:
 
-Yes, we successfully managed to train our model in the cloud using Vertex AI. We implemented this through custom training jobs defined in `vertex_config.yaml` and `vertex_sweep_config.yaml` configurations.
+We successfully managed to train our model in the cloud using Vertex AI. We implemented this through custom training jobs defined in `vertex_config.yaml` and `vertex_sweep_config.yaml` configurations.
 We containerized our training environment using the `train.dockerfile`, which packages our complete ML pipeline including PyTorch, Transformers, and all dependencies into a Docker image stored in Artifact Registry at `europe-west3-docker.pkg.dev/mlops-465916/my-container-registry/mlops-train:latest`
 We chose Vertex AI over direct Compute Engine because it provides managed ML infrastructure with automatic scaling, integrated experiment tracking, and seamless container orchestration. The service handles VM provisioning/de-provisioning automatically,
 
@@ -493,7 +501,7 @@ We chose Vertex AI over direct Compute Engine because it provides managed ML inf
 >
 > Answer:
 
-Yes, we successfully managed to write an API for our model using FastAPI. We implemented this in api/main.py with several production-ready features. <br>
+We successfully managed to write an API for our model using FastAPI. We implemented this in api/main.py with several production-ready features. <br>
 Our API loads ONNX-optimized models from WandB artifacts for faster inference, automatically downloading the latest model version at startup. The main endpoint /predict accepts text input and returns sentiment predictions with confidence scores using Pydantic models for request/response validation. <br>
 We added several special production features: Prometheus metrics integration for monitoring request latency, error rates, and throughput; automatic prediction logging to Cloud Storage for model monitoring and data collection; background tasks for non-blocking operations; and a health check endpoint for deployment monitoring. <br>
 The API is containerized using api.dockerfile and deployed on Google Cloud Run with auto-scaling capabilities. We implemented a sidecar container architecture with Prometheus metric collection as defined in cloudrun_monitoring.yaml, enabling comprehensive application monitoring. <br>
@@ -513,7 +521,7 @@ Additionally, we created a separate monitoring service (sentiment_monitoring.py)
 >
 > Answer:
 
-Yes, we successfully managed to deploy our API both locally and in the cloud using Google Cloud Run.
+We successfully managed to deploy our API both locally and in the cloud using Google Cloud Run.
 For deployment, we wrapped our model into a FastAPI application (api/main.py) containerized with Docker. We first tested locally by building the container using dockerfiles/api.dockerfile and running it with docker run, which worked successfully for development and testing. <br> <br>
 For cloud deployment, we used Google Cloud Run as a serverless platform. Our deployment is automated through Cloud Build pipelines defined in build_api_docker_image.yaml, which builds the container image, pushes it to Artifact Registry, and deploys it also using the cloudrun_monitoring.yaml configuration with auto-scaling and monitoring capabilities. <br> <br>
 Our live API is accessible at: https://financial-sentiment-api-687370715419.europe-west3.run.app
@@ -536,7 +544,7 @@ We also deployed a Streamlit frontend at https://frontend-891096115648.europe-we
 >
 > Answer:
 
-Yes, we performed both unit testing and load testing of our API. <br> <br>
+We performed both unit testing and load testing of our API. <br> <br>
 For unit testing, we used FastAPI's TestClient in `tests/test_api.py`. Our tests verify the root endpoint returns the correct welcome message and the /predict endpoint properly accepts financial text input and returns valid sentiment predictions with labels and confidence scores. We integrated these tests into our GitHub Actions CI/CD pipeline through tests.yaml to ensure code quality on every commit. <br> <br>
 For load testing, we used Locust with a custom test file `tests/locustfile.py` that simulates realistic user behavior. The load test randomly selects from financial text samples like "The company's profits increased this quarter" and "Stock prices fell sharply after the announcement" to test prediction performance under load. <br> <br>
 Our automated load testing runs through GitHub Actions `load_api_test.yaml` with the following configuration:
@@ -559,7 +567,11 @@ The results showed our Cloud Run deployment successfully handled the concurrent 
 >
 > Answer:
 
---- question 26 fill here ---
+We successfully implemented monitoring of our deployed FastAPI-based model using Prometheus and Google Cloud Monitoring. We instrumented our application with custom metrics using the prometheus_client library and exposed them via a /metrics endpoint. These metrics include the number of prediction requests, prediction errors, review lengths, and model latency.
+
+We configured Cloud Run to use a Prometheus sidecar container (cloud-run-gmp-sidecar) that scrapes the /metrics endpoint and forwards the metrics to Google Cloud Monitoring. This setup was defined in our cloudrun_monitoring.yaml file, which specifies container dependencies and memory limits for both the FastAPI app and the sidecar.
+
+Monitoring helps us observe the live behavior of the application and quickly detect anomalies, such as increased latency or error rates. We have also set an alerting system using GCS.
 
 ## Overall discussion of project
 
@@ -578,8 +590,10 @@ The results showed our Cloud Run deployment successfully handled the concurrent 
 >
 > Answer:
 
-Group member 1 (Ege Süalp) and Group member 2 (Celal Berke Can) used approximately 20 euro credits in total during the development of this MLOps project on Google Cloud Platform. <br><br>
+Group member 1 (Ege Süalp) and Group member 2 (Celal Berke Can) used approximately ~10 euro credits in total during the development of this MLOps project on Google Cloud Platform. <br><br>
+
 The service costing the most was Vertex AI due to the compute-intensive model training workloads. Training BERT models for financial sentiment analysis required n1-standard-8 instances running for extended periods, especially during hyperparameter sweeps. The underlying Compute Engine instances consumed the bulk of our credits since transformer model fine-tuning is computationally expensive. Secondary costs came from Artifact Registry for storing multiple Docker images and Cloud Run for API hosting, though these were minimal due to serverless pricing. <br><br>
+
 Working in the cloud was highly beneficial for our MLOps pipeline. It provided automatic scaling, managed infrastructure, and seamless integration between services without manual VM management. The pay-as-you-use model was cost-effective for our project scope, and services like Secret Manager and Cloud Build eliminated security and deployment complexities. <br><br>
 
 ### Question 28
@@ -599,7 +613,10 @@ Working in the cloud was highly beneficial for our MLOps pipeline. It provided a
 **Drift Detection System** <br>
 We implemented a comprehensive drift detection service in `sentiment_monitoring.py` using Evidently AI. This service continuously monitors our deployed model for data drift and performance degradation by comparing incoming prediction requests against our original training data stored in Cloud Storage `mlops-project-bucket1`. The system generates drift reports that track target drift and text evaluation metrics, helping us detect when the model's input distribution changes and when retraining might be necessary. This is crucial for maintaining model performance in production as financial language and sentiment patterns evolve over time.<br><br>
 **Streamlit Frontend Application**<br><br>
-We created a user-friendly Streamlit web application `frontend/app.py` deployed on Cloud Run at https://frontend-891096115648.europe-west1.run.app/. The frontend provides an intuitive interface where users can input financial text and receive real-time sentiment predictions without needing API knowledge. It connects seamlessly to our FastAPI backend, displays prediction confidence scores.<br><br>
+We created a user-friendly Streamlit web application `frontend/app.py` deployed on Cloud Run at https://frontend-891096115648.europe-west1.run.app/. The frontend provides an intuitive interface where users can input financial text and receive real-time sentiment predictions. It connects to our FastAPI backend, displays prediction confidence scores.<br><br>
+
+![frontend](figures/frontend.png)
+
 We implemented these features because they complete the MLOps cycle - the drift detection ensures long-term model reliability, while the frontend makes our ML service accessible to non-technical users, demonstrating a production-ready end-to-end solution rather than just a technical proof-of-concept.
 
 
@@ -631,7 +648,11 @@ We implemented these features because they complete the MLOps cycle - the drift 
 >
 > Answer:
 
---- question 30 fill here ---
+* The biggest challenge in the project was working with Google Cloud Platform (GCP). The web UI was often slow and resource-intensive, especially on consumer-grade laptops, which made navigation and configuration frustrating at times. Beyond performance, the UI is also quite complex and unintuitive in certain areas, particularly when managing services like Artifact Registry, Cloud Run, and IAM roles.
+
+* Collaborating as a team added another layer of difficulty due to the permissions model. Granting and requesting the right level of access often became a bottleneck, especially when dealing with service accounts or trying to push images and deploy services.
+
+* Another major hurdle was setting up GitHub workflows. The initial setup phase was filled with cryptic errors that required trial and error to resolve. Configuring secrets, aligning paths, and ensuring the workflows triggered correctly took significant time. Despite these issues, the experience gave us a deep dive into CI/CD best practices, and we ultimately succeeded in making our workflow reliable and automated.
 
 ### Question 31
 
@@ -649,14 +670,27 @@ We implemented these features because they complete the MLOps cycle - the drift 
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
 
-fewafewubaofewnafioewnifowf ewafw afew afewafewafionewoanf waf ewonfieownaf fewnaiof newio fweanøf wea fewa
- fweafewa fewiagonwa ognwra'g
- wa
- gwreapig ipweroang w rag
- wa grwa
-  g
-  ew
-  gwea g
-  ew ag ioreabnguorwa bg̈́aw
-   wa
-   gew4igioera giroeahgi0wra gwa
+* Ege Süalp was in charge of:
+    - Repository & Development Workflow Management: Initialized and maintained the GitHub repository, implemented pre-commit hooks, enforced PEP8 standards, and set up CI pipelines with caching, multi-OS testing, and linting steps. Also managed secret keys and created workflows for data-driven automation.<br><br>
+
+    - Model Development & Evaluation: Developed the full machine learning pipeline including data preprocessing, model training using PyTorch Lightning and Hugging Face, evaluation scripts, and dataset validation metrics using Hydra-configured scripts and CLI interfaces.<br><br>
+
+    - Containerization & Deployment: Built Dockerfiles for training and inference, profiled code performance, and optimized builds. Deployed the frontend (Streamlit) and backend (FastAPI) services to Cloud Run with ONNX-based model serving.<br><br>
+
+    - Monitoring & Observability: Integrated Prometheus-based custom system metrics into the FastAPI backend and configured Google Cloud Monitoring with the sidecar pattern to enable container-level metric collection and visualization.
+
+* Celal Berke Can was in charge of:
+    - Docker Containerization & Cloud Training: Developed Docker containers for training and created all Google Cloud integrations including Vertex AI configurations to enable scalable model training in the cloud <br>
+    
+    - API Development & Cloud Deployment: Built the FastAPI inference service, prediction endpoints, plus created Cloud Run deployment configurations<br><br>
+
+    - Cloud Infrastructure Management: Maintained Google Cloud logging systems, managed Cloud Build pipelines,and handled various automation tasks including Secret Manager integration for secure API key management
+
+    - Data Drift Detection System: Implemented the drift monitoring service using Evidently AI with Cloud Storage.<br><br>
+
+    - Hyperparameter Optimization: Configured WandB sweep implementations for automated hyperparameter tuning with Bayesian optimization.
+
+* Common tasks:
+    - Codebase Maintenance & Testing: Continuously maintained and tested the entire codebase regularly to fix bugs, improve code quality, optimize performance, and enhance project structure including refactoring configurations, updating dependencies.
+
+
