@@ -2,7 +2,7 @@
 
 ## Live Demo
 
-**Frontend Application**: [https://frontend-891096115648.europe-west1.run.app/](https://frontend-891096115648rope-west1.run.app/)
+**Frontend Application**: [https://frontend-891096115648.europe-west1.run.app/](https://frontend-891096115648.europe-west1.run.app/)
 
 **Inference API**: [https://financial-sentiment-api-687370715419.europe-west3.run.app/](https://financial-sentiment-api-687370715419.europe-west3.run.app/)
 
@@ -209,7 +209,7 @@ Edited according to project needs and structures.
 - Be aware that some functionalities and arguments might not work if you train with lightning. 
 - Example command:
   ```bash
-  python src/train_hf.py --config conf/config_hf.yaml
+  python src/train_hf.py --config-name config_hf
   ```
 - Adjust configuration files in `conf/` as needed.
 
