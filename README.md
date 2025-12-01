@@ -2,7 +2,7 @@
 
 <img width="1004" height="857" alt="Screenshot 2025-08-17 152730" src="https://github.com/user-attachments/assets/c6b7cf73-01c7-4307-84c5-27f98a398283" />
 
-## Live Demo
+## Live Demo (Currently Not Available)
 
 **Frontend Application**: [https://frontend-891096115648.europe-west1.run.app/](https://frontend-891096115648.europe-west1.run.app/)
 
